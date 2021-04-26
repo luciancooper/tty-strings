@@ -24,4 +24,38 @@ describe('stringWidth', () => {
     test('returns 0 on NaN', () => {
         expect(stringWidth(NaN)).toBe(0);
     });
+
+    describe('measures emoji', () => {
+        test('presentation sequences', () => {
+            expect(stringWidth('☠️')).toBe(1);
+        });
+
+        test('modifier bases', () => {
+            expect(stringWidth('👩')).toBe(2);
+        });
+
+        test('modifier sequences', () => {
+            expect(stringWidth('👩🏿')).toBe(2);
+        });
+
+        test('modifier characters that do not follow valid bases', () => {
+            expect(stringWidth('x\u{1F3FF}')).toBe(3);
+        });
+
+        test('flag sequences', () => {
+            expect(stringWidth('🇺🇸')).toBe(1);
+        });
+
+        test('tag sequences', () => {
+            expect(stringWidth('🏴󠁧󠁢󠁥󠁮󠁧󠁿')).toBe(2);
+        });
+
+        test('keycap sequences', () => {
+            expect(stringWidth('#️⃣')).toBe(1);
+        });
+
+        test('zwj sequences', () => {
+            expect(stringWidth('👨‍❤️‍💋‍👨')).toBe(2);
+        });
+    });
 });
