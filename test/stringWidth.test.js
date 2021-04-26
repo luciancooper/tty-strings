@@ -57,5 +57,12 @@ describe('stringWidth', () => {
         test('zwj sequences', () => {
             expect(stringWidth('👨‍❤️‍💋‍👨')).toBe(2);
         });
+
+        test('minimally-qualified zwj sequences', () => {
+            // fully qualified sequence (woman supervillain) - 1F9B9 1F3FB 200D 2640 FE0F
+            expect(stringWidth('🦹🏻‍♀️')).toBe(2);
+            // minimally qualified sequence (woman supervillain) - 1F9B9 1F3FB 200D 2640
+            expect(stringWidth('🦹🏻‍♀')).toBe(2);
+        });
     });
 });
