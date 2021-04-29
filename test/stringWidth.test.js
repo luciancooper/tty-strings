@@ -21,8 +21,17 @@ describe('stringWidth', () => {
         expect(stringWidth('\u001B]8;;https://foo.com\u0007bar\u001B]8;;\u0007')).toBe(3);
     });
 
-    test('returns 0 on NaN', () => {
+    test('returns 0 on non-string inputs', () => {
         expect(stringWidth(NaN)).toBe(0);
+        expect(stringWidth(true)).toBe(0);
+        expect(stringWidth({})).toBe(0);
+        expect(stringWidth([1, 2])).toBe(0);
+    });
+
+    test('returns 0 on empty strings', () => {
+        expect(stringWidth('')).toBe(0);
+        // empty string with escape sequences
+        expect(stringWidth('\u001b[31m\u001b[39m')).toBe(0);
     });
 
     describe('measures emoji', () => {
