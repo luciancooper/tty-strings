@@ -17,9 +17,16 @@ describe('wordWrap', () => {
     });
 
     test('breaks words longer than the max width when hard-wrap is enabled', () => {
-        expect(wordWrap('aa bbbbbbb c', 6, true)).toBe([
+        expect(wordWrap('aa bbbbbbb c', 6, { hard: true })).toBe([
             'aa bbb',
             'bbbb c',
+        ].join('\n'));
+    });
+
+    test('trims leading whitespace by default', () => {
+        expect(wordWrap('  a bb c ddd', 6)).toBe([
+            'a bb c',
+            'ddd',
         ].join('\n'));
     });
 
@@ -38,7 +45,7 @@ describe('wordWrap', () => {
     });
 
     test('trims whitespace when a hard-wrap word break begins on the next line', () => {
-        expect(wordWrap('aaa  bbbbbbbb ccc', 6, true)).toBe([
+        expect(wordWrap('aaa  bbbbbbbb ccc', 6, { hard: true })).toBe([
             'aaa',
             'bbbbbb',
             'bb ccc',
@@ -46,7 +53,7 @@ describe('wordWrap', () => {
     });
 
     test('preserves whitespace when a hard-wrap word break begins on the same line', () => {
-        expect(wordWrap('a  bbbbbbb c', 6, true)).toBe([
+        expect(wordWrap('a  bbbbbbb c', 6, { hard: true })).toBe([
             'a  bbb',
             'bbbb c',
         ].join('\n'));
@@ -66,7 +73,7 @@ describe('wordWrap', () => {
     });
 
     test('hard wraps ansi escape sequences', () => {
-        expect(wordWrap('aa \u001b[41mbbbbbbb c\u001b[49m', 6, true)).toBe([
+        expect(wordWrap('aa \u001b[41mbbbbbbb c\u001b[49m', 6, { hard: true })).toBe([
             'aa \u001b[41mbbb\u001b[49m',
             '\u001b[41mbbbb c\u001b[49m',
         ].join('\n'));
@@ -80,7 +87,7 @@ describe('wordWrap', () => {
     });
 
     test('hard wraps hyperlink escape sequences', () => {
-        expect(wordWrap('aa \u001b]8;;link\u0007bbbbbbb\u001b]8;;\u0007 c', 6, true)).toBe([
+        expect(wordWrap('aa \u001b]8;;link\u0007bbbbbbb\u001b]8;;\u0007 c', 6, { hard: true })).toBe([
             'aa \u001b]8;;link\u0007bbb\u001b]8;;\u0007',
             '\u001b]8;;link\u0007bbbb\u001b]8;;\u0007 c',
         ].join('\n'));
@@ -94,7 +101,7 @@ describe('wordWrap', () => {
     });
 
     test('hard wraps words with both foreground and background styling', () => {
-        expect(wordWrap('\u001b[41maaa \u001b[32mbbbbbbb\u001b[39m\u001b[49m', 6, true)).toBe([
+        expect(wordWrap('\u001b[41maaa \u001b[32mbbbbbbb\u001b[39m\u001b[49m', 6, { hard: true })).toBe([
             '\u001b[41maaa \u001b[32mbb\u001b[39m\u001b[49m',
             '\u001b[41m\u001b[32mbbbbb\u001b[39m\u001b[49m',
         ].join('\n'));
@@ -115,23 +122,27 @@ describe('wordWrap', () => {
     });
 
     test('hard wraps hyperlink escapes that contain background styling', () => {
-        expect(wordWrap('a \u001b]8;;link\u0007\u001b[41mbbbb\u001b[49mbbb\u001b]8;;\u0007 cc', 6, true)).toBe([
+        expect(wordWrap('a \u001b]8;;link\u0007\u001b[41mbbbb\u001b[49mbbb\u001b]8;;\u0007 cc', 6, {
+            hard: true,
+        })).toBe([
             'a \u001b]8;;link\u0007\u001b[41mbbbb\u001b[49m\u001b]8;;\u0007',
             '\u001b]8;;link\u0007bbb\u001b]8;;\u0007 cc',
         ].join('\n'));
     });
 
     test('hard wraps hyperlink escapes that overlap with background styling', () => {
-        expect(wordWrap('aa bb\u001b]8;;link\u0007bbb\u001b[41mbb \u001b]8;;\u0007c\u001b[49m', 6, true)).toBe([
+        expect(wordWrap('aa bb\u001b]8;;link\u0007bbb\u001b[41mbb \u001b]8;;\u0007c\u001b[49m', 6, {
+            hard: true,
+        })).toBe([
             'aa bb\u001b]8;;link\u0007b\u001b]8;;\u0007',
             '\u001b]8;;link\u0007bb\u001b[41mbb \u001b]8;;\u0007c\u001b[49m',
         ].join('\n'));
     });
 
     test('handles ESC[0m reset escape codes', () => {
-        expect(wordWrap('\u001b[41maa \u001b[32mbbb ccc\u001b[0m dd', 6)).toBe([
-            '\u001b[41maa \u001b[32mbbb\u001b[39m\u001b[49m',
-            '\u001b[41m\u001b[32mccc\u001b[0m dd',
+        expect(wordWrap('\u001b[41maa \u001b[32mbb \u001b[0mccc', 6)).toBe([
+            '\u001b[41maa \u001b[32mbb\u001b[0m',
+            'ccc',
         ].join('\n'));
     });
 
@@ -174,7 +185,7 @@ describe('wordWrap', () => {
 
         test('should not wrap to the next row when the word is hard wrapped', () => {
             // triggers line 172, 174
-            expect(wordWrap('aa \u001b[32mbb \u001b[39mccccccc ddd', 6, true)).toBe([
+            expect(wordWrap('aa \u001b[32mbb \u001b[39mccccccc ddd', 6, { hard: true })).toBe([
                 'aa \u001b[32mbb\u001b[39m',
                 'cccccc',
                 'c ddd',
@@ -191,7 +202,7 @@ describe('wordWrap', () => {
         });
 
         test('should wrap to the next row when the following word is hard wrapped', () => {
-            expect(wordWrap('aaa\u001b[41m  bbbbbbbb\u001b[49m ccc', 6, true)).toBe([
+            expect(wordWrap('aaa\u001b[41m  bbbbbbbb\u001b[49m ccc', 6, { hard: true })).toBe([
                 'aaa',
                 '\u001b[41mbbbbbb\u001b[49m',
                 '\u001b[41mbb\u001b[49m ccc',
@@ -208,7 +219,7 @@ describe('wordWrap', () => {
         });
 
         test('should wrap to their respective rows when the next word is hard-wrapped', () => {
-            expect(wordWrap('\u001b[32maaaa\u001b[41m \u001b[39mbbbbbbbb ccc\u001b[49m', 6, true)).toBe([
+            expect(wordWrap('\u001b[32maaaa\u001b[41m \u001b[39mbbbbbbbb ccc\u001b[49m', 6, { hard: true })).toBe([
                 '\u001b[32maaaa\u001b[39m',
                 '\u001b[41mbbbbbb\u001b[49m',
                 '\u001b[41mbb ccc\u001b[49m',
@@ -218,21 +229,21 @@ describe('wordWrap', () => {
 
     describe('at the break point in a hard-wrapped word', () => {
         test('closing escape sequences should not wrap to the next row', () => {
-            expect(wordWrap('\u001b[41maa bbb\u001b[49mbbbb c', 6, true)).toBe([
+            expect(wordWrap('\u001b[41maa bbb\u001b[49mbbbb c', 6, { hard: true })).toBe([
                 '\u001b[41maa bbb\u001b[49m',
                 'bbbb c',
             ].join('\n'));
         });
 
         test('opening escape sequences should wrap to the next row', () => {
-            expect(wordWrap('aa bbb\u001b[32mbbbb\u001b[39m c', 6, true)).toBe([
+            expect(wordWrap('aa bbb\u001b[32mbbbb\u001b[39m c', 6, { hard: true })).toBe([
                 'aa bbb',
                 '\u001b[32mbbbb\u001b[39m c',
             ].join('\n'));
         });
 
         test('overlapping opening & closing escape sequences should wrap to their respective rows', () => {
-            expect(wordWrap('\u001b[41maa bbb\u001b[32m\u001b[49mbbbb c\u001b[39m', 6, true)).toBe([
+            expect(wordWrap('\u001b[41maa bbb\u001b[32m\u001b[49mbbbb c\u001b[39m', 6, { hard: true })).toBe([
                 '\u001b[41maa bbb\u001b[49m',
                 '\u001b[32mbbbb c\u001b[39m',
             ].join('\n'));
@@ -245,7 +256,9 @@ describe('wordWrap', () => {
         });
 
         test('should be scrubbed from hard-wrapped words', () => {
-            expect(wordWrap('aa bbb\u001b]8;;link\u0007\u001b]8;;\u0007bbbb\u001b[33m\u001b[39m c', 6, true)).toBe([
+            expect(wordWrap('aa bbb\u001b]8;;link\u0007\u001b]8;;\u0007bbbb\u001b[33m\u001b[39m c', 6, {
+                hard: true,
+            })).toBe([
                 'aa bbb',
                 'bbbb c',
             ].join('\n'));
@@ -265,7 +278,7 @@ describe('wordWrap', () => {
         });
 
         test('should be scrubbed from hard-wrapped words', () => {
-            expect(wordWrap('aa bbbbb\u001b[49mbb\u001b]8;;\u0007 c', 6, true)).toBe([
+            expect(wordWrap('aa bbbbb\u001b[49mbb\u001b]8;;\u0007 c', 6, { hard: true })).toBe([
                 'aa bbb',
                 'bbbb c',
             ].join('\n'));
@@ -290,7 +303,7 @@ describe('wordWrap', () => {
 
         test('should be scrubbed from hard-wrapped words', () => {
             // the extra `ESC[33m` sequence should not appear in the result
-            expect(wordWrap('aa \u001b[31mbbbbb\u001b[33m\u001b[39mbb c', 6, true)).toBe([
+            expect(wordWrap('aa \u001b[31mbbbbb\u001b[33m\u001b[39mbb c', 6, { hard: true })).toBe([
                 'aa \u001b[31mbbb\u001b[39m',
                 '\u001b[31mbb\u001b[39mbb c',
             ].join('\n'));
@@ -314,11 +327,15 @@ describe('wordWrap', () => {
         });
 
         test('can be trimmed when it preceeds a hard-wrapped word', () => {
-            expect(wordWrap('aaaa \u001b[41m bbbbbbb\u001b[49m ccc', 6, true)).toBe([
+            expect(wordWrap('aaaa \u001b[41m bbbbbbb\u001b[49m ccc', 6, { hard: true })).toBe([
                 'aaaa',
                 '\u001b[41mbbbbbb\u001b[49m',
                 '\u001b[41mb\u001b[49m ccc',
             ].join('\n'));
+        });
+
+        test('can be trimmed from the beginning of a line', () => {
+            expect(wordWrap('\u001b[41m  a bb\u001b[49m c', 6)).toBe('\u001b[41ma bb\u001b[49m c');
         });
     });
 
@@ -347,11 +364,15 @@ describe('wordWrap', () => {
         });
 
         test('can be trimmed when it preceeds a hard-wrapped word', () => {
-            expect(wordWrap('aaa \u001b[41m \u001b[49m bbbbbbbb', 6, true)).toBe([
+            expect(wordWrap('aaa \u001b[41m \u001b[49m bbbbbbbb', 6, { hard: true })).toBe([
                 'aaa',
                 'bbbbbb',
                 'bb',
             ].join('\n'));
+        });
+
+        test('can be trimmed from the beginning of a line', () => {
+            expect(wordWrap('\u001b[41m \u001b[49m a bb c', 6)).toBe('a bb c');
         });
 
         describe('when the opening sequence is at the boundary of the prior word', () => {
@@ -363,11 +384,84 @@ describe('wordWrap', () => {
             });
 
             test('can be trimmed when it preceeds a hard-wrapped word', () => {
-                expect(wordWrap('aaa\u001b[41m \u001b[49m bbbbbbbb', 6, true)).toBe([
+                expect(wordWrap('aaa\u001b[41m \u001b[49m bbbbbbbb', 6, { hard: true })).toBe([
                     'aaa',
                     'bbbbbb',
                     'bb',
                 ].join('\n'));
+            });
+        });
+    });
+
+    describe('when trim left is disabled', () => {
+        test('leading whitespace is preserved', () => {
+            expect(wordWrap('  \u001b[41maa bbb cc\u001b[49m', 6, { trimLeft: false })).toBe([
+                '  \u001b[41maa\u001b[49m',
+                '\u001b[41mbbb cc\u001b[49m',
+            ].join('\n'));
+        });
+
+        test('leading whitespace is preserved hard-wrap mode', () => {
+            expect(wordWrap('\u001b[41m   \u001b[49maaaaaaaaaa', 6, { hard: true, trimLeft: false })).toBe([
+                '\u001b[41m   \u001b[49maaa',
+                'aaaaaa',
+                'a',
+            ].join('\n'));
+        });
+
+        test('leading whitespace will not cause the first word to wrap', () => {
+            // the first row should exceed the column limit
+            expect(wordWrap('\u001b[41m   aaaaa\u001b[49m bbb cc', 6, { trimLeft: false })).toBe([
+                '\u001b[41m   aaaaa\u001b[49m',
+                'bbb cc',
+            ].join('\n'));
+        });
+
+        test('leading whitespace will cause the first word to break in hard wrap mode', () => {
+            // first word should break despite not being longer than the column width
+            expect(wordWrap('\u001b[41m   aaaaa\u001b[49m', 6, { hard: true, trimLeft: false })).toBe([
+                '\u001b[41m   aaa\u001b[49m',
+                '\u001b[41maa\u001b[49m',
+            ].join('\n'));
+        });
+
+        // edge case where the width of leading whitespace >= columns
+        describe('large leading whitespace', () => {
+            test('forces a line break before the first word', () => {
+                expect(wordWrap('      aaaa', 6, { trimLeft: false })).toBe([
+                    '      ',
+                    'aaaa',
+                ].join('\n'));
+            });
+
+            test('preserves styles within a forced line break before the first word', () => {
+                expect(wordWrap('\u001b[41m      \u001b[32m\u001b[49maaaa\u001b[39m', 6, { trimLeft: false })).toBe([
+                    '\u001b[41m      \u001b[49m',
+                    '\u001b[32maaaa\u001b[39m',
+                ].join('\n'));
+            });
+
+            test('forces a line break before the first word in hard-wrap mode', () => {
+                expect(wordWrap('      aaaaaaa', 6, { hard: true, trimLeft: false })).toBe([
+                    '      ',
+                    'aaaaaa',
+                    'a',
+                ].join('\n'));
+            });
+
+            test('preserves styles within a forced line break before the first word in hard-wrap mode', () => {
+                expect(wordWrap('\u001b[41m      \u001b[32m\u001b[49maaaaaaa\u001b[39m', 6, {
+                    hard: true,
+                    trimLeft: false,
+                })).toBe([
+                    '\u001b[41m      \u001b[49m',
+                    '\u001b[32maaaaaa\u001b[39m',
+                    '\u001b[32ma\u001b[39m',
+                ].join('\n'));
+            });
+
+            test('returns an empty string if the entire input is whitespace', () => {
+                expect(wordWrap('\u001b[41m         \u001b[49m', 6, { trimLeft: false })).toBe('');
             });
         });
     });
