@@ -10,9 +10,14 @@ describe('sliceChars', () => {
         expect(sliceChars(NaN)).toBe('NaN');
     });
 
-    test('treats negative beginIndex values the same as 0', () => {
-        expect(sliceChars('foobar', -1, 3)).toBe('foo');
-        expect(sliceChars('foobar', -1, 0)).toBe('');
+    test('treats negative beginIndex values as length + beginIndex', () => {
+        expect(sliceChars('foobar', -3)).toBe('bar');
+        expect(sliceChars('foobar', -5, 4)).toBe('oob');
+    });
+
+    test('treats negative endIndex values as length + endIndex', () => {
+        expect(sliceChars('foobar', 0, -3)).toBe('foo');
+        expect(sliceChars('foobar', 1, -2)).toBe('oob');
     });
 
     test('slices surrogate pairs', () => {
