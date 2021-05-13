@@ -4,10 +4,10 @@ const https = require('https');
  * Fetch and parse a unicode data file
  * @param {string} path - path portion of the data file url
  * @param {boolean} [props=false] - specify if the file is a properties file, and parse accordingly
- * @returns {string[]|Object[]}
+ * @returns {Promise<string[]|Object[]>}
  */
 function fetchUnicodeFile(path, props = false) {
-    const url = `https://unicode.org/Public/${path}`;
+    const url = /^https:\/\//.test(path) ? path : `https://unicode.org/Public/${path}`;
     return new Promise((resolve, reject) => {
         https.get(url, (res) => {
             if (res.statusCode === 200) {
@@ -39,6 +39,16 @@ function fetchUnicodeFile(path, props = false) {
                     // resolve the promise
                     resolve(lines);
                 });
+            } else if (res.statusCode === 302) {
+                // handle redirect
+                const { location: redirect } = res.headers;
+                if (redirect !== url) {
+                    fetchUnicodeFile(redirect, props)
+                        .then((result) => resolve(result))
+                        .catch((err) => reject(err));
+                } else {
+                    reject(new Error(`Could not fetch '${url}'`));
+                }
             } else {
                 reject(new Error(`Could not fetch '${url}'`));
             }
