@@ -1,4 +1,4 @@
-const { emojiProps, isEmojiSequence } = require('../lib/emoji'),
+const { emojiProps, isEmojiZwjSequence, isEmojiModifierSequence } = require('../lib/emoji'),
     { fetchUnicodeFile, reduceRanges, selectFixtures } = require('./unicodeHelpers');
 
 describe('emojiProps', () => {
@@ -55,11 +55,8 @@ describe('emojiProps', () => {
     });
 });
 
-describe('isEmojiSequence', () => {
-    let modifierSequences,
-        zwjFullyQualified,
-        zwjMinimallyQualified,
-        zwjUnqualified;
+describe('isEmojiModifierSequence', () => {
+    let modifierSequences;
 
     beforeAll(async () => {
         // fetch and parse the emoji-sequences.txt unicode data file
@@ -68,6 +65,22 @@ describe('isEmojiSequence', () => {
             // include only sequences with the `RGI_Emoji_Modifier_Sequence` property
             return type === 'RGI_Emoji_Modifier_Sequence' ? seq.split(' ').map((s) => parseInt(s, 16)) : null;
         }).filter(Boolean);
+    });
+
+    test('passes RGI emoji modifier sequences', () => {
+        for (let i = 0, n = modifierSequences.length; i < n; i += 1) {
+            const [cp1, cp2] = modifierSequences[i];
+            expect(isEmojiModifierSequence(cp1, cp2)).toBe(true);
+        }
+    });
+});
+
+describe('isEmojiZwjSequence', () => {
+    let zwjFullyQualified,
+        zwjMinimallyQualified,
+        zwjUnqualified;
+
+    beforeAll(async () => {
         // fetch and parse the emoji-test.txt unicode data file
         const zwjTests = (await fetchUnicodeFile('emoji/latest/emoji-test.txt')).map((l) => {
             let [seq, type] = l.split(/\s*;\s*/g);
@@ -84,31 +97,24 @@ describe('isEmojiSequence', () => {
         zwjUnqualified = zwjTests.filter(([, type]) => type === 'unqualified').map(([seq]) => seq);
     });
 
-    test('passes RGI emoji modifier sequences', () => {
-        for (let i = 0, n = modifierSequences.length; i < n; i += 1) {
-            const seq = modifierSequences[i];
-            expect(isEmojiSequence(seq)).toBe(true);
-        }
-    });
-
     test('passes fully-qualified emoji zwj sequences', () => {
         for (let i = 0, n = zwjFullyQualified.length; i < n; i += 1) {
             const seq = zwjFullyQualified[i];
-            expect(isEmojiSequence(seq)).toBe(true);
+            expect(isEmojiZwjSequence(seq)).toBe(true);
         }
     });
 
     test('passes minimally-qualified emoji zwj sequences', () => {
         for (let i = 0, n = zwjMinimallyQualified.length; i < n; i += 1) {
             const seq = zwjMinimallyQualified[i];
-            expect(isEmojiSequence(seq)).toBe(true);
+            expect(isEmojiZwjSequence(seq)).toBe(true);
         }
     });
 
     test('rejects unqualified emoji zwj sequences', () => {
         for (let i = 0, n = zwjUnqualified.length; i < n; i += 1) {
             const seq = zwjUnqualified[i];
-            expect(isEmojiSequence(seq)).toBe(false);
+            expect(isEmojiZwjSequence(seq)).toBe(false);
         }
     });
 });
