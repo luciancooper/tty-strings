@@ -118,6 +118,23 @@ By default, words that are longer than the specified column width will not be br
 
 Trim leading whitespace from the beginning of each line. Setting this to `false` will preserve any leading whitespace found before each line in the input string.
 
+**Example**
+
+```js
+const { wordWrap } = require('tty-strings'),
+    chalk = require('chalk');
+
+const text = 'The ' + chalk.bgGreen.magenta('quick brown 🦊 jumps over') + ' the 😴 🐶.';
+
+console.log(wordWrap(text, 20));
+```
+
+<p>
+  <a id="word-wrap-example" href="#word-wrap-example">
+    <img src="media/word-wrap.svg" alt="word-wrap-example"/>
+  </a>
+</p>
+
 ### `sliceChars(string, [beginIndex, [endIndex]])`
 
 Slice a string by character index. Behaves like the native [String.slice()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice), except that indexes refer to grapheme clusters within the string, and it handles ANSI escape sequences.
