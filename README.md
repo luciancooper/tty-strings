@@ -1,18 +1,23 @@
 # tty-strings
 
+[![npm](https://img.shields.io/npm/v/tty-strings?logo=npm&style=flat-square)](https://www.npmjs.com/package/tty-strings)
+[![travis](https://img.shields.io/travis/com/luciancooper/tty-strings?logo=travis&style=flat-square)](https://travis-ci.com/luciancooper/tty-strings)
+[![coverage](https://img.shields.io/codecov/c/gh/luciancooper/tty-strings?logo=codecov&style=flat-square)](https://codecov.io/gh/luciancooper/tty-strings)
+[![LICENSE](https://img.shields.io/github/license/luciancooper/tty-strings?style=flat-square)](#license)
+
 A one stop shop for working with text displayed in the terminal.
 
 ## About
 
-The purpose of this project is to alleviate the headache that is working with javascript's internal representation of unicode characters, particularly within the context of displaying text in the terminal for command line applications.
+The goal of this project is to alleviate the headache of working with Javascript's internal representation of unicode characters, particularly within the context of displaying text in the terminal for command line applications.
 
 **Features**
 
-* Implements the grapheme cluster breaking algorithm outlined in [UAX #29](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries) to split strings into user perceived characters (graphemes).
+* Implements the Unicode grapheme cluster breaking algorithm outlined in [UAX #29](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries) to split strings into user perceived characters (graphemes).
 * Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). More details about the visual width of code points can be found in the [`codePointWidth`](#codepointwidthcode) function description below.
 * Provides methods for slicing and wrapping strings that contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
 
-Everything in this module is up to date with the latest version of unicode (currently version [13.0.0](https://www.unicode.org/versions/Unicode13.0.0/)).
+Everything in this module is up to date with the latest version of Unicode (currently version [13.0.0](https://www.unicode.org/versions/Unicode13.0.0/)).
 
 Check out the [acknowledgements](#acknowledgements) section below for a look at the other Javascript projects that inspired this module.
 
@@ -262,7 +267,7 @@ yarn test --coverage
 
 ## Acknowledgements
 
-The goal of this project is to provide a single module with improved implementations of the following Javascript packages, all of which are great projects that served as inspiration:
+This project was conceived of as a single module offering improved implementations of the following Javascript packages, all of which are great projects that served as inspiration:
 
 * [`string-width`](https://github.com/sindresorhus/string-width)
 * [`string-length`](https://github.com/sindresorhus/string-length)
@@ -270,7 +275,7 @@ The goal of this project is to provide a single module with improved implementat
 * [`wrap-ansi`](https://github.com/chalk/wrap-ansi)
 * [`slice-ansi`](https://github.com/chalk/slice-ansi)
 
-This projects internal implementation of Unicode's grapheme cluster breaking algorithm is inspired by Devon Govett's [`grapheme-breaker`](https://github.com/foliojs/grapheme-breaker) and Orlin Georgiev's [`grapheme-splitter`](https://github.com/orling/grapheme-splitter).
+This project's internal implementation of the Unicode grapheme cluster breaking algorithm is inspired by Devon Govett's [`grapheme-breaker`](https://github.com/foliojs/grapheme-breaker) and Orlin Georgiev's [`grapheme-splitter`](https://github.com/orling/grapheme-splitter).
 
 ## License
 
