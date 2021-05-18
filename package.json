@@ -1,14 +1,15 @@
 {
   "name": "tty-strings",
   "version": "1.0.0",
-  "description": "Useful tools to handle strings displayed in the terminal",
+  "description": "Tools for working with strings displayed in the terminal",
   "keywords": [
     "tty",
     "terminal",
     "cli",
     "ansi",
     "string",
-    "unicode"
+    "unicode",
+    "grapheme"
   ],
   "main": "lib/index.js",
   "files": [
