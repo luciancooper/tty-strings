@@ -5,11 +5,20 @@
   "keywords": [
     "tty",
     "terminal",
+    "console",
     "cli",
     "ansi",
+    "escape",
     "string",
     "unicode",
-    "grapheme"
+    "grapheme",
+    "symbol",
+		"character",
+    "emoji",
+		"width",
+    "wrap",
+    "wordwrap",
+    "slice"
   ],
   "main": "lib/index.js",
   "files": [
@@ -18,7 +27,11 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint .",
+    "prepublishOnly": "yarn test",
     "screencasts": "node tasks/screencasts.js"
+  },
+  "engines": {
+    "node": ">=8"
   },
   "publishConfig": {
     "access": "public"
