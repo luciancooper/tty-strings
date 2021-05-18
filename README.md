@@ -9,10 +9,12 @@ The purpose of this project is to alleviate the headache that is working with ja
 **Features**
 
 * Implements the grapheme cluster breaking algorithm outlined in [UAX #29](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries) to split strings into user perceived characters (graphemes).
-* Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). More details about the visual width of code points can be found in the [`codePointWidth`](#codepointwidthcode) function details below.
-* Provides methods for slicing and wrapping strings that include [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
+* Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). More details about the visual width of code points can be found in the [`codePointWidth`](#codepointwidthcode) function description below.
+* Provides methods for slicing and wrapping strings that contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
 
-Everything in this module is up to date with the lastest version of unicode (currently version [13.0.0](https://www.unicode.org/versions/Unicode13.0.0/)).
+Everything in this module is up to date with the latest version of unicode (currently version [13.0.0](https://www.unicode.org/versions/Unicode13.0.0/)).
+
+Check out the [acknowledgements](#acknowledgements) section below for a look at the other Javascript projects that inspired this module.
 
 ## Installation
 
@@ -183,6 +185,8 @@ Remove ANSI escape codes from a string.
 
 Returns `string` - the input string with all ANSI escape codes removed.
 
+This method is adapted from chalk's [`slice-ansi`](https://github.com/chalk/slice-ansi) package, and is essentially identical.
+
 **Example**
 
 ```js
@@ -255,6 +259,18 @@ To generate coverage reports, run:
 ```bash
 yarn test --coverage
 ```
+
+## Acknowledgements
+
+The goal of this project is to provide a single module with improved implementations of the following Javascript packages, all of which are great projects that served as inspiration:
+
+* [`string-width`](https://github.com/sindresorhus/string-width)
+* [`string-length`](https://github.com/sindresorhus/string-length)
+* [`is-fullwidth-code-point`](https://github.com/sindresorhus/is-fullwidth-code-point)
+* [`wrap-ansi`](https://github.com/chalk/wrap-ansi)
+* [`slice-ansi`](https://github.com/chalk/slice-ansi)
+
+This projects internal implementation of Unicode's grapheme cluster breaking algorithm is inspired by Devon Govett's [`grapheme-breaker`](https://github.com/foliojs/grapheme-breaker) and Orlin Georgiev's [`grapheme-splitter`](https://github.com/orling/grapheme-splitter).
 
 ## License
 
