@@ -140,4 +140,13 @@ describe('sliceColumns', () => {
     test('handles case where endIndex falls within a fullwidth character', () => {
         expect(sliceColumns('👨‍❤️‍💋‍👨👨‍👩‍👧‍👧🧑🏾‍🚀', 2, 5)).toBe('👨‍👩‍👧‍👧');
     });
+
+    test('result slice does not include control characters located at slice boundaries', () => {
+        // newline at the starting slice boundary should not be in the result
+        expect(sliceColumns('foo\nbar', 3)).toBe('bar');
+        // newline at the ending slice boundary should not be in the result
+        expect(sliceColumns('foo\nbar', 0, 3)).toBe('foo');
+        // the newline at both slice boundaries should not be in the result
+        expect(sliceColumns('fo\r\nobar\n', 2, 6)).toBe('obar');
+    });
 });
