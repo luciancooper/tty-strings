@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**.md']
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [12, 14, 15]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v2
+
+    - name: setup node ${{ matrix.node }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node }}
+
+    - name: get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - name: restore yarn cache directory
+      id: yarn-cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+
+    - name: install dependencies
+      run: yarn --frozen-lockfile
+
+    - name: run tests
+      run: yarn test --coverage
+
+    - name: upload coverage artifact
+      uses: actions/upload-artifact@v2
+      if: matrix.os == 'ubuntu-latest' && matrix.node == 12
+      with:
+        name: coverage
+        path: coverage
+
+  coverage:
+    name: Codecov
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v2
+
+    - name: download coverage artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: coverage
+        path: coverage
+
+    - name: upload to codecov
+      uses: codecov/codecov-action@v1

@@ -1,7 +1,7 @@
 # tty-strings
 
 [![npm](https://img.shields.io/npm/v/tty-strings?logo=npm&style=flat-square)](https://www.npmjs.com/package/tty-strings)
-[![travis](https://img.shields.io/travis/com/luciancooper/tty-strings?logo=travis&style=flat-square)](https://travis-ci.com/luciancooper/tty-strings)
+[![ci](https://img.shields.io/github/workflow/status/luciancooper/tty-strings/CI?logo=github&style=flat-square)](https://github.com/luciancooper/tty-strings/actions/workflows/ci.yml)
 [![coverage](https://img.shields.io/codecov/c/gh/luciancooper/tty-strings?logo=codecov&style=flat-square)](https://codecov.io/gh/luciancooper/tty-strings)
 [![LICENSE](https://img.shields.io/github/license/luciancooper/tty-strings?style=flat-square)](#license)
 
