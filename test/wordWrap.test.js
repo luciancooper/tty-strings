@@ -139,6 +139,14 @@ describe('wordWrap', () => {
         );
     });
 
+    test('handles escape sequences that span multiple input lines', () => {
+        expect(wordWrap('\u001b[41maaaa \u001b[33mbbb\nccc\u001b[39m dd\u001b[49m', 6)).toBe(
+            '\u001b[41maaaa\u001b[49m\n'
+            + '\u001b[41m\u001b[33mbbb\u001b[39m\u001b[49m\n'
+            + '\u001b[41m\u001b[33mccc\u001b[39m dd\u001b[49m',
+        );
+    });
+
     test('handles ESC[0m reset escape codes', () => {
         expect(wordWrap('\u001b[41maa \u001b[32mbb \u001b[0mccc', 6)).toBe(
             '\u001b[41maa \u001b[32mbb\u001b[0m\n'
@@ -184,7 +192,6 @@ describe('wordWrap', () => {
         });
 
         test('should not wrap to the next row when the word is hard wrapped', () => {
-            // triggers line 172, 174
             expect(wordWrap('aa \u001b[32mbb \u001b[39mccccccc ddd', 6, { hard: true })).toBe(
                 'aa \u001b[32mbb\u001b[39m\n'
                 + 'cccccc\n'
@@ -391,6 +398,47 @@ describe('wordWrap', () => {
                 );
             });
         });
+
+        describe('that span an input line break', () => {
+            test('is trimmed', () => {
+                expect(wordWrap('aaa bbb\u001b[41m  \n   \u001b[49mccc', 6)).toBe(
+                    'aaa\n'
+                    + 'bbb\n'
+                    + 'ccc',
+                );
+            });
+
+            test('is trimmed when it preceeds a hard-wrapped word', () => {
+                expect(wordWrap('aaa bbb\u001b[41m  \n   \u001b[49mccccccc', 6, { hard: true })).toBe(
+                    'aaa\n'
+                    + 'bbb\n'
+                    + 'cccccc\n'
+                    + 'c',
+                );
+            });
+
+            describe('when trim left is disabled', () => {
+                test('is preserved after the line break', () => {
+                    expect(wordWrap('aaa bbb\u001b[41m  \n   \u001b[49mccc', 6, { trimLeft: false })).toBe(
+                        'aaa\n'
+                        + 'bbb\n'
+                        + '\u001b[41m   \u001b[49mccc',
+                    );
+                });
+
+                test('is preserved after the line break that preceeds a hard-wrapped word', () => {
+                    expect(wordWrap('aaa bbb\u001b[41m  \n   \u001b[49mcccccc', 6, {
+                        hard: true,
+                        trimLeft: false,
+                    })).toBe(
+                        'aaa\n'
+                        + 'bbb\n'
+                        + '\u001b[41m   \u001b[49mccc\n'
+                        + 'ccc',
+                    );
+                });
+            });
+        });
     });
 
     describe('when trim left is disabled', () => {
@@ -435,9 +483,9 @@ describe('wordWrap', () => {
             });
 
             test('preserves styles within a forced line break before the first word', () => {
-                expect(wordWrap('\u001b[41m      \u001b[32m\u001b[49maaaa\u001b[39m', 6, { trimLeft: false })).toBe(
+                expect(wordWrap('\u001b[41m      \u001b[32m\u001b[49m  aaaa\u001b[39m', 6, { trimLeft: false })).toBe(
                     '\u001b[41m      \u001b[49m\n'
-                    + '\u001b[32maaaa\u001b[39m',
+                    + '\u001b[32m  aaaa\u001b[39m',
                 );
             });
 
@@ -457,6 +505,23 @@ describe('wordWrap', () => {
                     '\u001b[41m      \u001b[49m\n'
                     + '\u001b[32maaaaaa\u001b[39m\n'
                     + '\u001b[32ma\u001b[39m',
+                );
+            });
+
+            test('preserves styling across paragraphs that start with a forced line break', () => {
+                expect(wordWrap('\u001b[33maaaa\u001b[41m\n      \u001b[49maaa\u001b[39m bb', 6, { trimLeft: false })).toBe(
+                    '\u001b[33maaaa\u001b[39m\n'
+                    + '\u001b[33m\u001b[41m      \u001b[49m\u001b[39m\n'
+                    + '\u001b[33maaa\u001b[39m bb',
+                );
+            });
+
+            test('preserves styling across paragraphs that start with a forced line break in hard-wrap mode', () => {
+                expect(wordWrap('\u001b[41maaaa\n      aaaaaaa\u001b[49m', 6, { hard: true, trimLeft: false })).toBe(
+                    '\u001b[41maaaa\u001b[49m\n'
+                    + '\u001b[41m      \u001b[49m\n'
+                    + '\u001b[41maaaaaa\u001b[49m\n'
+                    + '\u001b[41ma\u001b[49m',
                 );
             });
 
