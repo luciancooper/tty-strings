@@ -13,16 +13,18 @@
     "unicode",
     "grapheme",
     "symbol",
-		"character",
+    "character",
     "emoji",
-		"width",
+    "width",
     "wrap",
     "wordwrap",
     "slice"
   ],
   "main": "lib/index.js",
+  "types:": "index.d.ts",
   "files": [
-    "lib"
+    "lib",
+    "index.d.ts"
   ],
   "scripts": {
     "test": "jest",
