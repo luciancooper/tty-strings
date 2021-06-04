@@ -5,25 +5,37 @@ describe('codePointWidth', () => {
     let fixtures;
 
     beforeAll(async () => {
-        // fetch and parse the DerivedEastAsianWidth.txt unicode data file
-        let full = (await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedEastAsianWidth.txt', true))
-            // keep only East_Asian_Width property values `W` and `F`
-            .filter(([,, East_Asian_Width]) => (East_Asian_Width === 'W' || East_Asian_Width === 'F'))
+        // fetch full width code point data file
+        let full;
+        try {
+            full = await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedEastAsianWidth.txt', true);
+        } catch (e) {
+            throw new Error(`Failed to fetch full width code point data:\n\n${e.message}`);
+        }
+        // keep only East_Asian_Width property values `W` and `F`
+        full = full.filter(([,, East_Asian_Width]) => (East_Asian_Width === 'W' || East_Asian_Width === 'F'))
             .map(([cp1, cp2]) => [cp1, cp2, 2])
             .sort(([a], [b]) => a - b);
         // reduce full width ranges
         full = reduceRanges(full);
-        // fetch zero width code point ranges
-        let zero = [
-            // fetch and parse the DerivedCoreProperties.txt unicode data file
-            ...(await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
-                // keep only the Default_Ignorable_Code_Point code point ranges
-                .filter(([,, prop]) => prop === 'Default_Ignorable_Code_Point'),
-            // fetch and parse the DerivedGeneralCategory.txt unicode data file
-            ...(await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedGeneralCategory.txt', true))
-                // keep only code points with General_Category values `Mn`, `Me`, and `Cc`
-                .filter(([,, gc]) => (gc === 'Mn' || gc === 'Me' || gc === 'Cc')),
-        ].map(([cp1, cp2]) => [cp1, cp2, 0]).sort(([a], [b]) => a - b);
+        // fetch zero width code point data files
+        let zero;
+        try {
+            zero = [
+                // fetch and parse the DerivedCoreProperties.txt unicode data file
+                ...(await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
+                    // keep only the Default_Ignorable_Code_Point code point ranges
+                    .filter(([,, prop]) => prop === 'Default_Ignorable_Code_Point'),
+                // fetch and parse the DerivedGeneralCategory.txt unicode data file
+                ...(await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedGeneralCategory.txt', true))
+                    // keep only code points with General_Category values `Mn`, `Me`, and `Cc`
+                    .filter(([,, gc]) => (gc === 'Mn' || gc === 'Me' || gc === 'Cc')),
+            ];
+        } catch (e) {
+            throw new Error(`Failed to fetch zero width code point data:\n\n${e.message}`);
+        }
+        // sort zero width ranges
+        zero = zero.map(([cp1, cp2]) => [cp1, cp2, 0]).sort(([a], [b]) => a - b);
         // reduce zero width ranges
         zero = reduceRanges(zero);
         // initialize array to store merged ranges

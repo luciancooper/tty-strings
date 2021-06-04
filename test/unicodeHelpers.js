@@ -9,37 +9,12 @@ const http = require('http');
 function fetchUnicodeFile(path, props = false) {
     const url = /^http:\/\//.test(path) ? path : `http://unicode.org/Public/${path}`;
     return new Promise((resolve, reject) => {
-        http.get(url, (res) => {
-            if (res.statusCode === 200) {
-                let data = '';
-                // A chunk of data has been recieved
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-                // The whole response has been received
-                res.on('end', () => {
-                    // split file lines
-                    let lines = data
-                        .split('\n')
-                        // remove comments
-                        .map((l) => {
-                            const i = l.indexOf('#');
-                            return (i >= 0 ? l.slice(0, i) : l).trim();
-                        })
-                        // filter out empty lines
-                        .filter(Boolean);
-                    // parse props if specified
-                    if (props) {
-                        lines = lines.map((line) => {
-                            const [cp, ...p] = line.split(/\s*;\s*/g),
-                                [cp1, cp2 = cp1] = cp.split('..').map((h) => parseInt(h, 16));
-                            return [cp1, cp2, ...p];
-                        });
-                    }
-                    // resolve the promise
-                    resolve(lines);
-                });
-            } else if (res.statusCode === 302) {
+        http.get(url, {
+            headers: { 'Cache-Control': 'no-cache' },
+        }, (res) => {
+            const { statusCode } = res;
+            // check for redirect
+            if (statusCode === 302) {
                 // handle redirect
                 const { location: redirect } = res.headers;
                 if (redirect !== url) {
@@ -47,13 +22,66 @@ function fetchUnicodeFile(path, props = false) {
                         .then((result) => resolve(result))
                         .catch((err) => reject(err));
                 } else {
-                    reject(new Error(`Could not fetch '${url}'`));
+                    reject(new Error(
+                        `Request to fetch '${url}' failed\n`
+                        + `Status Code ${statusCode} - bad redirect`,
+                    ));
                 }
-            } else {
-                reject(new Error(`Could not fetch '${url}'`));
+                return;
             }
+            // ensure status code is 200
+            if (statusCode !== 200) {
+                reject(new Error(
+                    `Request to fetch '${url}' failed\n`
+                    + `Status Code ${statusCode}`,
+                ));
+                return;
+            }
+            res.setEncoding('utf8');
+            let data = '';
+            // A chunk of data has been recieved
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            // The whole response has been received
+            res.on('end', () => {
+                // split file lines
+                let lines = data
+                    .split('\n')
+                    // remove comments & clean up line
+                    .map((raw) => {
+                        const i = raw.indexOf('#'),
+                            l = i >= 0 ? raw.slice(0, i) : raw;
+                        return l.split(';').slice(0, 2).join(';').trim();
+                    })
+                    // filter out empty lines
+                    .filter(Boolean);
+                // ensure response data is not corrupt
+                const corrupted = lines.filter((l) => !/^[A-Z0-9 ÷×.;_-]+$/i.test(l));
+                if (corrupted.length) {
+                    reject(new Error(
+                        `Request to fetch '${url}' returned the following corrupted lines:${
+                            corrupted.slice(0, 5).map((l) => `\n * '${l}'`).join('')
+                        }${corrupted.length > 5 ? `\n ... ${corrupted.length - 5} more lines` : ''}`,
+                    ));
+                    return;
+                }
+                // parse props if specified
+                if (props) {
+                    lines = lines.map((line) => {
+                        const [cp, ...p] = line.split(/\s*;\s*/g),
+                            [cp1, cp2 = cp1] = cp.split('..').map((h) => parseInt(h, 16));
+                        return [cp1, cp2, ...p];
+                    });
+                }
+                // resolve the promise
+                resolve(lines);
+            });
         }).on('error', (err) => {
-            reject(err);
+            reject(new Error(
+                `Request to fetch '${url}' failed\n`
+                + `Error Code: ${err.code}\n${err.message}`,
+            ));
         });
     });
 }
