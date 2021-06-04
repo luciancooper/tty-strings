@@ -1,4 +1,4 @@
-const https = require('https');
+const http = require('http');
 
 /**
  * Fetch and parse a unicode data file
@@ -7,9 +7,9 @@ const https = require('https');
  * @returns {Promise<string[]|Object[]>}
  */
 function fetchUnicodeFile(path, props = false) {
-    const url = /^https:\/\//.test(path) ? path : `https://unicode.org/Public/${path}`;
+    const url = /^http:\/\//.test(path) ? path : `http://unicode.org/Public/${path}`;
     return new Promise((resolve, reject) => {
-        https.get(url, (res) => {
+        http.get(url, (res) => {
             if (res.statusCode === 200) {
                 let data = '';
                 // A chunk of data has been recieved
