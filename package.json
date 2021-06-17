@@ -21,7 +21,7 @@
     "slice"
   ],
   "main": "lib/index.js",
-  "types:": "index.d.ts",
+  "types": "index.d.ts",
   "files": [
     "lib",
     "index.d.ts"
