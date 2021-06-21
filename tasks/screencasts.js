@@ -64,7 +64,6 @@ function hasBoldStyling(string) {
         const { 0: seq, index: j } = m;
         if (j > i && boldActive) return true;
         i = j + seq.length;
-        // eslint-disable-next-line no-control-regex
         const { 1: code } = seq.match(/[\u001B\u009B]\[(\d+)(?:;\d+)*m/) || {};
         if (!code) continue;
         const n = Number(code);
