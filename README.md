@@ -182,6 +182,24 @@ sliceColumns('🙈🙉🙊', 0, 2);
 // > '🙈'
 ```
 
+### `splitLines(string)`
+
+Split a string with ANSI escape codes into an array of lines. Supports both `CRLF` and `LF` newlines.
+
+ * `string` - Input string to split.
+
+Returns `string[]` - lines in the input string.
+
+**Example**
+
+```js
+const { splitLines } = require('tty-strings'),
+    chalk = require('chalk');
+
+splitLines(chalk.green('foo\nbar'));
+// > ['\u001b[32mfoo\u001b[39m', '\u001b[32mbar\u001b[39m']
+```
+
 ### `stripAnsi(string)`
 
 Remove ANSI escape codes from a string.
