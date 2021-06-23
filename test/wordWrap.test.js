@@ -263,7 +263,7 @@ describe('wordWrap', () => {
         });
 
         test('should be scrubbed from hard-wrapped words', () => {
-            expect(wordWrap('aa bbb\u001b]8;;link\u0007\u001b]8;;\u0007bbbb\u001b[33m\u001b[39m c', 6, {
+            expect(wordWrap('aa \u001b[31m\u001b[39mbbb\u001b[32m\u001b[39mbbbb\u001b[33m\u001b[39m c', 6, {
                 hard: true,
             })).toBe(
                 'aa bbb\n'
