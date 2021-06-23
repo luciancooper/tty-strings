@@ -126,6 +126,26 @@ export function sliceChars(string: string, beginIndex?: number, endIndex?: numbe
 export function sliceColumns(string: string, beginIndex?: number, endIndex?: number): string;
 
 /**
+ * Split a string with ANSI escape codes into an array of lines.
+ *
+ * @remarks
+ * Supports both `CRLF` and `LF` newlines.
+ *
+ * @example
+ * ```ts
+ * import { splitLines } from 'tty-strings';
+ * import chalk from 'chalk';
+ *
+ * splitLines(chalk.green('foo\nbar'));
+ * // > ['\u001b[32mfoo\u001b[39m', '\u001b[32mbar\u001b[39m']
+ * ```
+ *
+ * @param string - Input string to split.
+ * @returns Lines in the input string.
+ */
+export function splitLines(string: string): string[];
+
+/**
  * Remove ANSI escape codes from a string.
  *
  * @remarks
