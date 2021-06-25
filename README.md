@@ -182,6 +182,26 @@ sliceColumns('🙈🙉🙊', 0, 2);
 // > '🙈'
 ```
 
+### `spliceChars(string, start, deleteCount, [insert])`
+
+Insert, remove or replace characters from a string, similar to the native [`Array.splice()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice) method. String may contain ANSI escape codes; inserted content will adopt any ANSI styling applied to the character immediately preceding the insert point.
+
+ * `string` - Input string to remove, insert, or replace characters from.
+ * `start` - Character index at which to begin splicing. Negative values specify a position measured from the character length of the string.
+ * `deleteCount` - The number of characters to remove from the string. If `0`, no characters will be removed from the string.
+ * `insert` - Optional string to be inserted at the index specified by the `start` parameter. If omitted, nothing will be inserted into the string.
+
+Returns `string` - the modified input string.
+
+**Example**
+
+```js
+const { spliceChars } = require('tty-strings');
+
+spliceChars('à̰ b̸ ĉ̥', 2, 1, 'x͎͛ÿz̯̆');
+// > 'à̰ x͎͛ÿz̯̆ ĉ̥'
+```
+
 ### `splitLines(string)`
 
 Split a string with ANSI escape codes into an array of lines. Supports both `CRLF` and `LF` newlines.
