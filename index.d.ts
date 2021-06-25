@@ -126,6 +126,26 @@ export function sliceChars(string: string, beginIndex?: number, endIndex?: numbe
 export function sliceColumns(string: string, beginIndex?: number, endIndex?: number): string;
 
 /**
+ * Insert, remove or replace characters from a string, similar to the native `Array.splice()` method.
+ * String may contain ANSI escape codes; inserted content will adopt any ANSI styling applied to the character
+ * immediately preceding the insert point.
+ *
+ * @example
+ * ```ts
+ * import { spliceChars } from 'tty-strings';
+ *
+ * spliceChars('à̰ b̸ ĉ̥', 2, 1, 'x͎͛ÿz̯̆'); // 'à̰ x͎͛ÿz̯̆ ĉ̥'
+ * ```
+ *
+ * @param string - Input string from which to remove, insert, or replace characters.
+ * @param start - Character index at which to begin splicing.
+ * @param deleteCount - Number of characters to remove from the string.
+ * @param insert - Optional string to be inserted at the index specified by the `start` parameter.
+ * @returns The modified input string.
+ */
+export function spliceChars(string: string, start: number, deleteCount: number, insert?: string): string;
+
+/**
  * Split a string with ANSI escape codes into an array of lines.
  *
  * @remarks
