@@ -53,10 +53,7 @@ describe('emojiProps', () => {
     });
 
     test('emoji property mask values', () => {
-        for (let i = 0, n = fixtures.length; i < n; i += 1) {
-            const [cp, mask] = fixtures[i];
-            expect(emojiProps(cp)).toBe(mask);
-        }
+        expect(fixtures.map(([cp, mask]) => [cp, emojiProps(cp), mask])).toMatchEachCodePoint();
     });
 });
 
@@ -80,10 +77,7 @@ describe('isEmojiModifierSequence', () => {
     });
 
     test('passes RGI emoji modifier sequences', () => {
-        for (let i = 0, n = modifierSequences.length; i < n; i += 1) {
-            const [cp1, cp2] = modifierSequences[i];
-            expect(isEmojiModifierSequence(cp1, cp2)).toBe(true);
-        }
+        expect(modifierSequences.map((seq) => [seq, isEmojiModifierSequence(...seq)])).toMatchEachSequence(true);
     });
 });
 
@@ -117,23 +111,14 @@ describe('isEmojiZwjSequence', () => {
     });
 
     test('passes fully-qualified emoji zwj sequences', () => {
-        for (let i = 0, n = zwjFullyQualified.length; i < n; i += 1) {
-            const seq = zwjFullyQualified[i];
-            expect(isEmojiZwjSequence(seq)).toBe(true);
-        }
+        expect(zwjFullyQualified.map((seq) => [seq, isEmojiZwjSequence(seq)])).toMatchEachSequence(true);
     });
 
     test('passes minimally-qualified emoji zwj sequences', () => {
-        for (let i = 0, n = zwjMinimallyQualified.length; i < n; i += 1) {
-            const seq = zwjMinimallyQualified[i];
-            expect(isEmojiZwjSequence(seq)).toBe(true);
-        }
+        expect(zwjMinimallyQualified.map((seq) => [seq, isEmojiZwjSequence(seq)])).toMatchEachSequence(true);
     });
 
     test('rejects unqualified emoji zwj sequences', () => {
-        for (let i = 0, n = zwjUnqualified.length; i < n; i += 1) {
-            const seq = zwjUnqualified[i];
-            expect(isEmojiZwjSequence(seq)).toBe(false);
-        }
+        expect(zwjUnqualified.map((seq) => [seq, isEmojiZwjSequence(seq)])).toMatchEachSequence(false);
     });
 });

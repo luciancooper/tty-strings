@@ -102,26 +102,14 @@ describe('codePointWidth', () => {
     });
 
     test('full width code points', () => {
-        const fixtureSelection = fixtures.filter(([, n]) => n === 2);
-        for (let i = 0, n = fixtureSelection.length; i < n; i += 1) {
-            const [cp] = fixtureSelection[i];
-            expect(codePointWidth(cp)).toBe(2);
-        }
+        expect(fixtures.filter(([, n]) => n === 2).map(([cp]) => [cp, codePointWidth(cp)])).toMatchEachCodePoint(2);
     });
 
     test('zero width code points', () => {
-        const fixtureSelection = fixtures.filter(([, n]) => n === 0);
-        for (let i = 0, n = fixtureSelection.length; i < n; i += 1) {
-            const [cp] = fixtureSelection[i];
-            expect(codePointWidth(cp)).toBe(0);
-        }
+        expect(fixtures.filter(([, n]) => n === 0).map(([cp]) => [cp, codePointWidth(cp)])).toMatchEachCodePoint(0);
     });
 
     test('normal width code points', () => {
-        const fixtureSelection = fixtures.filter(([, n]) => n === 1);
-        for (let i = 0, n = fixtureSelection.length; i < n; i += 1) {
-            const [cp] = fixtureSelection[i];
-            expect(codePointWidth(cp)).toBe(1);
-        }
+        expect(fixtures.filter(([, n]) => n === 1).map(([cp]) => [cp, codePointWidth(cp)])).toMatchEachCodePoint(1);
     });
 });

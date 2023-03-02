@@ -30,11 +30,8 @@ describe('graphemeBreakProperty', () => {
     });
 
     test.each(Object.entries({ ...classes, Other: 0 }))('grapheme break property %s', (cls, value) => {
-        const fixtureSelection = fixtures.filter(([, v]) => v === value);
-        for (let i = 0, n = fixtureSelection.length; i < n; i += 1) {
-            const [cp] = fixtureSelection[i];
-            expect(graphemeBreakProperty(cp)).toBe(value);
-        }
+        expect(fixtures.filter(([, v]) => v === value).map(([cp]) => [cp, graphemeBreakProperty(cp)]))
+            .toMatchEachCodePoint(value);
     });
 });
 
