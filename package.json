@@ -1,6 +1,6 @@
 {
   "name": "tty-strings",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Tools for working with strings displayed in the terminal",
   "keywords": [
     "tty",
