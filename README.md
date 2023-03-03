@@ -1,7 +1,7 @@
 # tty-strings
 
 [![npm](https://img.shields.io/npm/v/tty-strings?logo=npm&style=flat-square)](https://www.npmjs.com/package/tty-strings)
-[![ci](https://img.shields.io/github/workflow/status/luciancooper/tty-strings/CI?logo=github&style=flat-square)](https://github.com/luciancooper/tty-strings/actions/workflows/ci.yml)
+[![ci](https://img.shields.io/github/actions/workflow/status/luciancooper/tty-strings/ci.yml?logo=github&style=flat-square)](https://github.com/luciancooper/tty-strings/actions/workflows/ci.yml)
 [![coverage](https://img.shields.io/codecov/c/gh/luciancooper/tty-strings?logo=codecov&style=flat-square)](https://codecov.io/gh/luciancooper/tty-strings)
 [![LICENSE](https://img.shields.io/github/license/luciancooper/tty-strings?style=flat-square)](#license)
 
@@ -17,7 +17,7 @@ The goal of this project is to alleviate the headache of working with Javascript
 * Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). More details about the visual width of code points can be found in the [`codePointWidth`](#codepointwidthcode) function description below.
 * Provides methods for slicing and wrapping strings that contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
 
-Everything in this module is up to date with the latest version of Unicode (currently version [13.0.0](https://www.unicode.org/versions/Unicode13.0.0/)).
+Everything in this module is up to date with the latest version of Unicode (currently version [15.0.0](https://www.unicode.org/versions/Unicode15.0.0/)).
 
 Check out the [acknowledgements](#acknowledgements) section below for a look at the other Javascript projects that inspired this module.
 
