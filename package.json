@@ -30,6 +30,7 @@
     "test": "jest",
     "lint": "eslint .",
     "prepublishOnly": "yarn test",
+    "update-browserslist": "browserslist --update-db",
     "screencasts": "node tasks/screencasts.js"
   },
   "engines": {
