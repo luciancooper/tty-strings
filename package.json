@@ -50,12 +50,6 @@
       "@lcooper"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
   "lint-staged": {
     "*.js": "eslint"
   },
@@ -74,8 +68,8 @@
     "ansi-regex": "^5.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^12.1.0",
-    "@lcooper/commitlint-config": "^1.1.0",
+    "@commitlint/cli": "^19.2.1",
+    "@lcooper/commitlint-config": "^2.0.0",
     "@lcooper/eslint-config": "^2.1.0",
     "@lcooper/eslint-config-jest": "^1.1.1",
     "chalk": "^4.1.1",
@@ -83,9 +77,9 @@
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-jest": "^24.3.2",
     "eslint-plugin-jsdoc": "^35.4.0",
-    "husky": "^4.3.8",
+    "husky": "^9.0.11",
     "jest": "^27.0.4",
-    "lint-staged": "^10.5.4",
+    "lint-staged": "^15.2.2",
     "svg-term": "^1.3.1",
     "svgo": "^2.3.0"
   }
