@@ -11,7 +11,7 @@ insert_final_newline = true
 [*.md]
 trim_trailing_whitespace = false
 
-[*.{js,jsx,ts,tsx}]
+[*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}]
 insert_final_newline = false
 
 [*.{json,yaml,yml}]

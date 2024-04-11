@@ -1,0 +1,117 @@
+import parseAnsi from './parseAnsi';
+import { parseEscape, closeEscapes, type AnsiEscape } from './utils';
+import splitChars from './splitChars';
+import charWidths from './charWidths';
+import stringLength from './stringLength';
+import stringWidth from './stringWidth';
+
+function createSlicer(
+    iterator: (string: string) => Generator<readonly [string, number], void>,
+    measureFn: (string: string) => number,
+) {
+    return (string: string, beginIndex = 0, endIndex = Infinity) => {
+        // convert input to string if necessary
+        // eslint-disable-next-line no-param-reassign
+        if (typeof string !== 'string') string = String(string);
+        // if either beginIndex or endIndex are negative, measure the string and adjust
+        if (beginIndex < 0 || endIndex < 0) {
+            // measure the string
+            const n = measureFn(string);
+            // adjust begin index if negative
+            // eslint-disable-next-line no-param-reassign
+            if (beginIndex < 0) beginIndex = n + beginIndex;
+            // adjust end index if negative
+            // eslint-disable-next-line no-param-reassign
+            if (endIndex < 0) endIndex = n + endIndex;
+        }
+        // if slice span is <= 0, return an empty string
+        if (beginIndex >= endIndex) return '';
+        // ansi escapes stack, items in the form [seq, isLink, close, idx]
+        const ansiStack: AnsiEscape<number>[] = [];
+        // the result string
+        let result = '',
+            // current slice index
+            idx = 0,
+            // current stack index
+            ax = -1;
+        // match all ansi escape codes
+        for (const [chunk, isEscape] of parseAnsi(string)) {
+            // check if chunk is an escape sequence
+            if (isEscape) {
+                // process this escape sequence
+                const closed = parseEscape(ansiStack, chunk, idx);
+                // add sequence to result if it closes an active item in the stack
+                if (closed != null && closed <= ax) result += chunk;
+                continue;
+            }
+            // store the value of the slice index at the outset of this chunk
+            const sidx = idx;
+            // iterate through the characters in this chunk
+            for (const [char, span] of iterator(chunk)) {
+                // check if we are currently within the desired slice
+                if ((beginIndex < idx || (beginIndex === idx && span > 0)) && idx + span <= endIndex) {
+                    // check if the stack index is less than the slice index at the start of this chunk
+                    if (ax < sidx) {
+                        result += ansiStack.filter(([,,, x]) => x > ax).map(([s]) => s).join('');
+                        ax = sidx;
+                    }
+                    // add char to the result
+                    result += char;
+                }
+                // increment current slice index
+                idx += span;
+                // stop if the upper limit of the desired slice has been exceeded
+                if (idx >= endIndex) {
+                    // close active items in the escape stack and return the result slice
+                    return result + closeEscapes(ansiStack.filter(([,,, x]) => x <= ax));
+                }
+            }
+        }
+        // close active items in the escape stack and return the result slice
+        return result + closeEscapes(ansiStack.filter(([,,, x]) => x <= ax));
+    };
+}
+
+/**
+ * Slice a string by character index. Behaves like the native `String.slice()`, except that indexes refer
+ * to grapheme clusters within the string, and it handles ANSI escape sequences. Negative index values specify
+ * a position measured from the character length of the string.
+ *
+ * @example
+ * ```ts
+ * import { sliceChars } from 'tty-strings';
+ *
+ * const slice = sliceChars('🙈🙉🙊', 0, 2); // '🙈🙉'
+ * ```
+ *
+ * @param string - Input string to slice.
+ * @param beginIndex - Character index (defaults to `0`) at which to begin the slice.
+ * @param endIndex - Character index before which to end the slice.
+ * @returns The sliced string.
+ */
+export const sliceChars = createSlicer(
+    function* iterator(str: string) {
+        for (const char of splitChars(str)) yield [char, 1];
+    },
+    stringLength,
+);
+
+/**
+ * Slice a string by column index. Behaves like the native `String.slice()`, except that indexes account
+ * for the visual width of each character, and it handles ANSI escape sequences. Negative index values specify
+ * a position measured from the visual width of the string.
+ *
+ * @example
+ * ```ts
+ * import { sliceColumns } from 'tty-strings';
+ *
+ * // '🙈', '🙉', and '🙊' are all full width characters
+ * const slice = sliceColumns('🙈🙉🙊', 0, 2); // '🙈'
+ * ```
+ *
+ * @param string - Input string to slice.
+ * @param beginIndex - Column index (defaults to `0`) at which to begin the slice.
+ * @param endIndex - Column index before which to end the slice.
+ * @returns The sliced string.
+ */
+export const sliceColumns = createSlicer(charWidths, stringWidth);

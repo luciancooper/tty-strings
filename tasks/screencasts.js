@@ -4,8 +4,7 @@ const fs = require('fs'),
     { render } = require('svg-term'),
     { optimize } = require('svgo'),
     ansiRegex = require('ansi-regex'),
-    wordWrap = require('../lib/wordWrap'),
-    stripAnsi = require('../lib/stripAnsi'),
+    { wordWrap, stripAnsi } = require('..'),
     mediaFiles = require('../media/files');
 
 const theme = {
@@ -64,7 +63,7 @@ function hasBoldStyling(string) {
         const { 0: seq, index: j } = m;
         if (j > i && boldActive) return true;
         i = j + seq.length;
-        const { 1: code } = seq.match(/[\u001B\u009B]\[(\d+)(?:;\d+)*m/) || {};
+        const [, code] = /[\u001B\u009B]\[(\d+)(?:;\d+)*m/.exec(seq) ?? [];
         if (!code) continue;
         const n = Number(code);
         if (n === 1) boldActive = true;
@@ -77,7 +76,7 @@ function hasBoldStyling(string) {
  * Fetch the required css code for a chunk of text
  * @param {string} string - the text the font will apply to
  * @param {string} fontFamily - the name of the font to use
- * @returns {string} - css code
+ * @returns {Promise<string>} - css code
  */
 async function fetchFontCss(string, fontFamily) {
     // determine character subset
@@ -116,7 +115,7 @@ async function fetchFontCss(string, fontFamily) {
  * Render a screencast
  * @param {string} string - content displayed in the terminal
  * @param {number} width - width of the terminal window
- * @returns {string} - screencast svg
+ * @returns {Promise<string>} - screencast svg
  */
 async function renderScreencast(string, width) {
     // height of the terminal

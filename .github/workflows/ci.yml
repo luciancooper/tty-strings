@@ -19,16 +19,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        node: [14, 16]
+        node: [16, 18, 20]
 
     runs-on: ${{ matrix.os }}
 
     steps:
     - name: checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: setup node ${{ matrix.node }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node }}
 
@@ -39,7 +39,7 @@ jobs:
 
     - name: restore yarn cache directory
       id: yarn-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
@@ -53,8 +53,8 @@ jobs:
       run: yarn test --coverage
 
     - name: upload coverage artifact
-      uses: actions/upload-artifact@v3
-      if: matrix.node == 16
+      uses: actions/upload-artifact@v4
+      if: matrix.node == 20
       with:
         name: coverage
         path: coverage
@@ -65,13 +65,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: download coverage artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: coverage
         path: coverage
 
     - name: upload to codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
