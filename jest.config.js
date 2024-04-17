@@ -12,4 +12,12 @@ module.exports = {
     setupFilesAfterEnv: [
         '<rootDir>/test/jest.setup.ts',
     ],
+    transform: {
+        '^.+\\.ts?$': ['ts-jest', {
+            diagnostics: {
+                // ignore `esModuleInterop` warning
+                ignoreCodes: ['TS151001'],
+            },
+        }],
+    },
 };
