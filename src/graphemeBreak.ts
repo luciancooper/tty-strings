@@ -52,8 +52,8 @@ export const InCBProps = {
  * Get the grapheme cluster break property of a given Unicode code point
  *
  * @remarks
- * Properties are derived from {@link https://unicode.org/Public/13.0.0/ucd/auxiliary/GraphemeBreakProperty.txt}
- * Extended_Pictographic values are derived from {@link https://unicode.org/Public/13.0.0/ucd/emoji/emoji-data.txt}
+ * Properties are derived from {@link https://unicode.org/Public/15.1.0/ucd/auxiliary/GraphemeBreakProperty.txt}
+ * Extended_Pictographic values are derived from {@link https://unicode.org/Public/15.1.0/ucd/emoji/emoji-data.txt}
  * InCB properties are derived from {@link https://www.unicode.org/Public/15.1.0/ucd/DerivedCoreProperties.txt}
  *
  * @param code - unicode code point

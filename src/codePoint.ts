@@ -2,11 +2,11 @@
  * Get the visual width of a Unicode code point.
  *
  * @remarks
- * Full width code points are derived from {@link https://unicode.org/Public/13.0.0/ucd/EastAsianWidth.txt}
+ * Full width code points are derived from {@link https://unicode.org/Public/15.1.0/ucd/EastAsianWidth.txt}
  * Zero width code points include those with general category values of Mn, Me, and Cc,
- * which are derived from {@link https://unicode.org/Public/13.0.0/ucd/extracted/DerivedGeneralCategory.txt}
+ * which are derived from {@link https://unicode.org/Public/15.1.0/ucd/extracted/DerivedGeneralCategory.txt}
  * As well as all code points with the `Default_Ignorable_Code_Point` property,
- * which are derived from {@link https://unicode.org/Public/13.0.0/ucd/DerivedCoreProperties.txt}
+ * which are derived from {@link https://unicode.org/Public/15.1.0/ucd/DerivedCoreProperties.txt}
  *
  * @example
  * ```ts

@@ -2,7 +2,7 @@
  * Get the emoji properties of a given unicode code point
  *
  * @remarks
- * Properties are derived from {@link https://unicode.org/Public/13.0.0/ucd/emoji/emoji-data.txt}
+ * Properties are derived from {@link https://unicode.org/Public/15.1.0/ucd/emoji/emoji-data.txt}
  *
  * @param code - unicode code point
  * @returns A bitmask encoded with the following properties:
