@@ -1,4 +1,4 @@
-import { graphemeBreakProperty, shouldBreak, type GBP } from './graphemeBreak';
+import { graphemeBreakProperty, shouldBreak } from './graphemeBreak';
 
 /**
  * A generator function that splits a string into its component graphemes. Does not handle ANSI escape codes,
@@ -24,7 +24,7 @@ export default function* splitChars(string: string): Generator<string, void> {
     // lower string index of the first grapheme cluster
     let i = 0,
         // initialize array to store grapheme break properties
-        props: GBP[] = [],
+        props: number[] = [],
         // get first code point
         cp = string.codePointAt(0)!,
         // get grapheme break property of the first code point

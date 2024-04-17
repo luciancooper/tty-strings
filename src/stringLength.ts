@@ -1,5 +1,5 @@
 import stripAnsi from './stripAnsi';
-import { graphemeBreakProperty, shouldBreak, type GBP } from './graphemeBreak';
+import { graphemeBreakProperty, shouldBreak } from './graphemeBreak';
 
 /**
  * Get the length of a string in grapheme clusters. ANSI escape codes will be ignored.
@@ -28,7 +28,7 @@ export default function stringLength(string: string): number {
     // initialize character count
     let count = 1,
         // initialize array to store grapheme break properties
-        props: GBP[] = [],
+        props: number[] = [],
         // get first code point
         cp = str.codePointAt(0)!,
         // get grapheme break property of the first code point

@@ -1,6 +1,6 @@
 import stripAnsi from './stripAnsi';
 import codePointWidth from './codePoint';
-import { graphemeBreakProperty, shouldBreak, GBProps, type GBP } from './graphemeBreak';
+import { graphemeBreakProperty, shouldBreak, GBProps } from './graphemeBreak';
 import { isEmojiZwjSequence, isEmojiModifierSequence } from './emoji';
 
 const { RI, ExtendedPictographic, Extend } = GBProps;
@@ -31,7 +31,7 @@ export default function stringWidth(string: string): number {
         // initialize code points array for the first grapheme cluster
         cpoints = [cp],
         // initialize array to store grapheme break properties
-        props: GBP[] = [],
+        props: number[] = [],
         // get width of first code point in the first grapheme cluster
         fcw = codePointWidth(cp),
         // initialize total width of the first grapheme cluster
@@ -62,7 +62,7 @@ export default function stringWidth(string: string): number {
         } else {
             // check for a regional indicator sequence or an emoji modifier sequence
             const emojiSeq = (prev === RI && next === RI)
-                || (prev === ExtendedPictographic && next === Extend && isEmojiModifierSequence(cp, nextCp));
+                || (prev === ExtendedPictographic && (next & 0xF) === Extend && isEmojiModifierSequence(cp, nextCp));
             // if not a emoji flag or modifier seq, increment width of the current grapheme cluster
             if (!emojiSeq) cw += codePointWidth(nextCp);
             // add code point to code points array for the current grapheme cluster

@@ -4,12 +4,13 @@ import http = require('http');
 /**
  * Fetch and parse a unicode data file
  * @param path - path portion of the data file url
- * @param props - specify if the file is a properties file, and parse accordingly
+ * @param props - specify if the file is a code point properties file, and parse accordingly
+ * @param cols - number of columns to extract from the source file
  * @returns the contents of the fetched unicode file
  */
-export function fetchUnicodeFile(path: string, props: false): Promise<string[]>;
-export function fetchUnicodeFile(path: string, props: true): Promise<[number, number, ...string[]][]>;
-export function fetchUnicodeFile(path: string, props = false) {
+export function fetchUnicodeFile(path: string, props: false, cols?: number): Promise<string[]>;
+export function fetchUnicodeFile(path: string, props: true, cols?: number): Promise<[number, number, ...string[]][]>;
+export function fetchUnicodeFile(path: string, props: boolean, cols?: number) {
     const url = path.startsWith('http://') ? path : `http://unicode.org/Public/${path}`;
     return new Promise((resolve, reject) => {
         http.get(url, {
@@ -21,7 +22,7 @@ export function fetchUnicodeFile(path: string, props = false) {
                 // handle redirect
                 const redirect = res.headers.location!;
                 if (redirect !== url) {
-                    fetchUnicodeFile(redirect, props as false).then(resolve).catch(reject);
+                    fetchUnicodeFile(redirect, props as false, cols).then(resolve).catch(reject);
                 } else {
                     reject(new Error(
                         `Request to fetch '${url}' failed\n`
@@ -53,7 +54,7 @@ export function fetchUnicodeFile(path: string, props = false) {
                         .map((raw) => {
                             const i = raw.indexOf('#'),
                                 l = i >= 0 ? raw.slice(0, i) : raw;
-                            return l.split(';').slice(0, 2).join(';').trim();
+                            return l.split(';').slice(0, cols).join(';').trim();
                         })
                         // filter out empty lines
                         .filter(Boolean),

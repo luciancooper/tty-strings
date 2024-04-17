@@ -8,7 +8,7 @@ describe('codePointWidth', () => {
         // fetch full width code point data file
         let fetched: [number, number, ...string[]][];
         try {
-            fetched = await fetchUnicodeFile('15.0.0/ucd/extracted/DerivedEastAsianWidth.txt', true);
+            fetched = await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedEastAsianWidth.txt', true);
         } catch (e) {
             throw new Error(`Failed to fetch full width code point data:\n\n${(e as { message: string }).message}`);
         }
@@ -23,11 +23,11 @@ describe('codePointWidth', () => {
         try {
             fetched = [
                 // fetch and parse the DerivedCoreProperties.txt unicode data file
-                ...(await fetchUnicodeFile('15.0.0/ucd/DerivedCoreProperties.txt', true))
+                ...(await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
                     // keep only the Default_Ignorable_Code_Point code point ranges
                     .filter(([,, prop]) => prop === 'Default_Ignorable_Code_Point'),
                 // fetch and parse the DerivedGeneralCategory.txt unicode data file
-                ...(await fetchUnicodeFile('15.0.0/ucd/extracted/DerivedGeneralCategory.txt', true))
+                ...(await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedGeneralCategory.txt', true))
                     // keep only code points with General_Category values `Mn`, `Me`, and `Cc`
                     .filter(([,, gc]) => (gc === 'Mn' || gc === 'Me' || gc === 'Cc')),
             ];

@@ -61,7 +61,7 @@ describe('isEmojiModifierSequence', () => {
         // fetch the emoji-sequences.txt unicode data file
         let data: string[];
         try {
-            data = await fetchUnicodeFile('emoji/latest/emoji-sequences.txt', false);
+            data = await fetchUnicodeFile('emoji/latest/emoji-sequences.txt', false, 2);
         } catch (e) {
             throw new Error(`Failed to fetch emoji sequence data:\n\n${(e as { message: string }).message}`);
         }

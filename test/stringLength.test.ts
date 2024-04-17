@@ -31,7 +31,7 @@ describe('stringLength', () => {
     });
 
     test('counts hindi letters with combining marks', () => {
-        expect(stringLength('अनुच्छेद')).toBe(5);
+        expect(stringLength('अनुच्छेद')).toBe(4);
     });
 
     test('counts hangul syllables', () => {

@@ -345,19 +345,17 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
     }
     // Supplemental Punctuation ... Hangul Jamo Extended-A (2E00 - A97F)
     if (code < 0xA980) {
-        return code < 0x3000 ? (
+        return code < 0x2FF0 ? (
             (code >= 0x2E80 && (
                 // CJK Radicals Supplement
                 (code <= 0x2EF3 && code !== 0x2E9A) // W [115]
                 // Kangxi Radicals
                 || (code >= 0x2F00 && code <= 0x2FD5) // W [214]
-                // Ideographic Description Characters
-                || (code >= 0x2FF0 && code <= 0x2FFB) // W [12]
             )) ? 2 : 1
         ) : code < 0x3100 ? (
             code <= 0x303E
-                // CJK Symbols and Punctuation
-                ? ((code >= 0x302A && code <= 0x302D) ? 0 : 2) // Mn [4] / F [1] & W [58]
+                // Ideographic Description Characters + CJK Symbols and Punctuation
+                ? ((code >= 0x302A && code <= 0x302D) ? 0 : 2) // Mn [4] / F [1] & W [74]
                 // Hiragana & Katakana
                 : ((code >= 0x3041 && code <= 0x3096) || code >= 0x309B) ? 2 // W [187]
                     : (code >= 0x3099) ? 0 : 1 // Mn [2]
@@ -366,9 +364,9 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
                 // Bopomofo ... CJK Strokes
                 code === 0x3164 ? 0 // Lo [1]
                     : (code >= 0x3105 && code !== 0x3130 && code !== 0x318F) ? 2 : 1 // W [220]
-            ) : (code < 0x4DC0 ? (code >= 0x31F0 && (
+            ) : (code < 0x4DC0 ? (code >= 0x31EF && (
                 // Katakana Phonetic Extensions & Enclosed CJK Letters and Months
-                (code <= 0x3247 && code !== 0x321F) // W [87]
+                (code <= 0x3247 && code !== 0x321F) // W [88]
                 // CJK Compatibility & CJK Unified Ideographs Extension A
                 || code >= 0x3250 // W [7,024]
             )) : (code >= 0x4E00 && (
@@ -794,6 +792,8 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
         ) : (
             // CJK Unified Ideographs Extension F
             (code >= 0x2CEB0 && code <= 0x2EBE0) // W [7,473]
+            // CJK Unified Ideographs Extension I
+            || (code >= 0x2EBF0 && code <= 0x2EE5D) // W [622]
             // CJK Compatibility Ideographs Supplement
             || (code >= 0x2F800 && code <= 0x2FA1D) // W [542]
             // CJK Unified Ideographs Extension G

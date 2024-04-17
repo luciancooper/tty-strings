@@ -22,7 +22,7 @@ describe('charWidths', () => {
     });
 
     test('handles hindi characters with combining marks', () => {
-        expect([...charWidths('अनुच्छेद')]).toStrictEqual([['अ', 1], ['नु', 1], ['च्', 1], ['छे', 1], ['द', 1]]);
+        expect([...charWidths('अनुच्छेद')]).toStrictEqual([['अ', 1], ['नु', 1], ['च्छे', 2], ['द', 1]]);
     });
 
     test('handles hangul syllable characters', () => {

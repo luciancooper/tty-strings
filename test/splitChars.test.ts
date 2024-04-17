@@ -22,7 +22,7 @@ describe('splitChars', () => {
     });
 
     test('splits hindi strings with combining marks', () => {
-        expect([...splitChars('अनुच्छेद')]).toStrictEqual(['अ', 'नु', 'च्', 'छे', 'द']);
+        expect([...splitChars('अनुच्छेद')]).toStrictEqual(['अ', 'नु', 'च्छे', 'द']);
     });
 
     test('splits hangul syllables', () => {

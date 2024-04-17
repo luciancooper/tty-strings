@@ -9,6 +9,10 @@ describe('stringWidth', () => {
         expect(stringWidth('⌚⭐⺎⽋豈Ａ🚀')).toBe(14);
     });
 
+    test('measures indic linking consonants', () => {
+        expect(stringWidth('अनुच्छेद')).toBe(5);
+    });
+
     test('measures zero width characters', () => {
         expect(stringWidth('\x08\x7F')).toBe(0);
     });
