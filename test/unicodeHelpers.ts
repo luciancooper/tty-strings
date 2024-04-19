@@ -85,18 +85,69 @@ export function fetchUnicodeFile(path: string, props: boolean, cols?: number) {
 }
 
 /**
- * Merge overlapping / adjacent code point ranges
- * @param ranges - code point ranges to merge
- * @returns merged code point ranges
+ * Sort code point ranges and split any that overlap
+ * @param ranges - code point ranges to process
+ * @param merge - optional function to merge the values of two overlapping ranges
+ * @returns processed code point ranges
  */
-export function reduceRanges<T extends number>(ranges: [number, number, T][]) {
-    let i = 0;
-    while (i < ranges.length - 1) {
+export function processRanges<T extends number>(
+    ranges: [number, number, T][],
+    merge: (a: T, b: T) => T | null = () => null,
+) {
+    // sort ranges in place
+    ranges.sort(([a1, a2], [b1, b2]) => a1 - b1 || a2 - b2);
+    // split overlapping ranges
+    for (let i = 0; i < ranges.length - 1;) {
         const [r1, r2] = [ranges[i]!, ranges[i + 1]!];
-        if (r2[0] - r1[1] <= 1 && r1[2] === r2[2]) {
-            // merge the two ranges
-            r1[1] = Math.max(r1[1], r2[1]);
+        if (r2[0] > r1[1]) {
+            i += 1;
+            continue;
+        }
+        if (r1[0] < r2[0]) {
+            ranges.splice(i, 0, [r1[0], r2[0] - 1, r1[2]]);
+            r1[0] = r2[0];
+            i += 1;
+            // ensure following range is sorted correctly
+            if (r1[1] > r2[1]) {
+                let j = i;
+                for (; j < ranges.length - 1; j += 1) {
+                    const [c1, c2] = ranges[j + 1]!;
+                    if (r1[0] < c1 || (r1[0] === c1 && r1[1] <= c2)) break;
+                }
+                // shift down ranges and swap
+                for (let x = i; x < j; x += 1) ranges[x] = ranges[x + 1]!;
+                ranges[j] = r1;
+            }
+            continue;
+        }
+        // merge values of the two ranges
+        if (r1[2] !== r2[2]) {
+            const v = merge(r1[2], r2[2]);
+            if (v === null) {
+                throw new Error(
+                    'Invalid overlap between the following code point ranges overlap:\n\n'
+                    + `  ${r1[0].toString(16)} - ${r1[1].toString(16)} (${r1[2]})\n`
+                    + `  ${r2[0].toString(16)} - ${r2[1].toString(16)} (${r2[2]})`,
+                );
+            }
+            r1[2] = v;
+        }
+        if (r1[1] === r2[1]) {
+            // following range overlaps, remove it
             ranges.splice(i + 1, 1);
+            continue;
+        }
+        r2[0] = r1[1] + 1;
+        // ensure following range is sorted correctly
+        let j = i + 1;
+        for (; j < ranges.length - 1; j += 1) {
+            const [c1, c2] = ranges[j + 1]!;
+            if (r2[0] < c1 || (r2[0] === c1 && r2[1] <= c2)) break;
+        }
+        if (j > i + 1) {
+            // shift down ranges and swap
+            for (let x = i + 1; x < j; x += 1) ranges[x] = ranges[x + 1]!;
+            ranges[j] = r2;
         } else i += 1;
     }
     return ranges;
@@ -110,15 +161,15 @@ export function reduceRanges<T extends number>(ranges: [number, number, T][]) {
  */
 export function selectFixtures<T extends number>(ranges: [number, number, T][], def: T): [number, T][] {
     const fixtures: [number, T][] = [];
-    let prev = 0;
+    let prev = -1;
     for (const [cp1, cp2, value] of ranges) {
-        if (cp1 - prev) {
+        if (cp1 - prev > 1) {
             // add lowest code point in the gap range
-            fixtures.push([prev, def]);
+            fixtures.push([prev + 1, def]);
             // add median code point in the gap range
-            if (cp1 - prev > 2) fixtures.push([Math.floor((prev + cp1 - 1) / 2), def]);
+            if (cp1 - prev > 3) fixtures.push([Math.floor((prev + cp1) / 2), def]);
             // add highest code point in the gap range
-            if (cp1 - prev > 1) fixtures.push([cp1 - 1, def]);
+            if (cp1 - prev > 2) fixtures.push([cp1 - 1, def]);
         }
         // add lowest code point in the range
         fixtures.push([cp1, value]);
@@ -127,8 +178,8 @@ export function selectFixtures<T extends number>(ranges: [number, number, T][], 
         // add highest code point in the range
         if (cp2 - cp1 > 0) fixtures.push([cp2, value]);
         // update prev
-        prev = cp2 + 1;
+        prev = cp2;
     }
-    fixtures.push([prev, def]);
+    fixtures.push([prev + 1, def]);
     return fixtures;
 }

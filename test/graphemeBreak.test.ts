@@ -1,5 +1,5 @@
 import { graphemeBreakProperty, shouldBreak, GBProps, InCBProps } from '../src/graphemeBreak';
-import { fetchUnicodeFile, reduceRanges, selectFixtures } from './unicodeHelpers';
+import { fetchUnicodeFile, processRanges, selectFixtures } from './unicodeHelpers';
 
 type Base_GBP = typeof GBProps[keyof typeof GBProps];
 
@@ -8,9 +8,9 @@ describe('grapheme break base properties', () => {
 
     beforeAll(async () => {
         // fetch GraphemeBreakProperty.txt & emoji-data.txt unicode files
-        let fetched: [number, number, string][];
+        let ranges: [number, number, Base_GBP][];
         try {
-            fetched = [
+            ranges = [
                 // get grapheme break property data
                 ...(await fetchUnicodeFile('UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt', true))
                     .map<[number, number, string]>(([x, y, p]) => [x, y, p === 'Regional_Indicator' ? 'RI' : p!]),
@@ -19,14 +19,12 @@ describe('grapheme break base properties', () => {
                     // keep only Extended_Pictographic values
                     .filter(([,, prop]) => prop === 'Extended_Pictographic')
                     .map<[number, number, string]>(([x, y]) => [x, y, 'ExtendedPictographic']),
-            ];
+            ].map<[number, number, Base_GBP]>(([x, y, k]) => [x, y, GBProps[k as keyof typeof GBProps]]);
         } catch (e) {
             throw new Error(`Failed to fetch grapheme break property data:\n\n${(e as { message: string }).message}`);
         }
-        // convert each grapheme break property to its equivalent integer value
-        let ranges = fetched.map<[number, number, Base_GBP]>(([x, y, k]) => [x, y, GBProps[k as keyof typeof GBProps]]);
-        // sort & reduce the ranges
-        ranges = reduceRanges(ranges.sort(([a], [b]) => a - b));
+        // process the ranges
+        ranges = processRanges(ranges);
         // select fixture code points
         fixtures = selectFixtures(ranges, 0);
     });
@@ -45,19 +43,17 @@ describe('indic conjunct props', () => {
 
     beforeAll(async () => {
         // fetch DerivedCoreProperties.txt unicode file
-        let fetched: [number, number, string][];
+        let ranges: [number, number, InCB_GBP][];
         try {
-            fetched = (await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
+            ranges = (await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
                 .filter(([,, prop]) => prop === 'InCB')
-                .map<[number, number, string]>(([x, y,, prop]) => [x, y, prop!]);
+                // convert each incb property to its equivalent integer value
+                .map<[number, number, InCB_GBP]>(([x, y,, k]) => [x, y, InCBProps[k as keyof typeof InCBProps]]);
         } catch (e) {
             throw new Error(`Failed to fetch derived core properties data:\n\n${(e as { message: string }).message}`);
         }
-        // convert each grapheme break property to its equivalent integer value
-        let ranges = fetched
-            .map<[number, number, InCB_GBP]>(([x, y, k]) => [x, y, InCBProps[k as keyof typeof InCBProps]]);
-        // sort & reduce the ranges
-        ranges = reduceRanges(ranges.sort(([a], [b]) => a - b));
+        // process the ranges
+        ranges = processRanges(ranges);
         // select fixture code points
         fixtures = selectFixtures(ranges, 0);
     });
