@@ -217,7 +217,7 @@ const { splitLines } = require('tty-strings'),
     chalk = require('chalk');
 
 splitLines(chalk.green('foo\nbar'));
-// > ['\u001b[32mfoo\u001b[39m', '\u001b[32mbar\u001b[39m']
+// > ['\x1b[32mfoo\x1b[39m', '\x1b[32mbar\x1b[39m']
 ```
 
 ### `stripAnsi(string)`
@@ -235,7 +235,7 @@ This method is adapted from chalk's [`slice-ansi`](https://github.com/chalk/slic
 ```js
 const { stripAnsi } = require('tty-strings');
 
-stripAnsi('\u001b[32mfoo\u001b[39m');
+stripAnsi('\x1b[32mfoo\x1b[39m');
 // > 'foo'
 ```
 

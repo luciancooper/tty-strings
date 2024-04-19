@@ -14,7 +14,7 @@ const regex = ansiRegex();
  * ```ts
  * import { stripAnsi } from 'tty-strings';
  *
- * const stripped = stripAnsi('\u001b[32mfoo\u001b[39m'); // 'foo'
+ * const stripped = stripAnsi('\x1b[32mfoo\x1b[39m'); // 'foo'
  * ```
  *
  * @param string - Input string to strip.

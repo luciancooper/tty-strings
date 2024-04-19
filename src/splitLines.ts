@@ -13,7 +13,7 @@ import { parseEscape, closeEscapes, type AnsiEscape } from './utils';
  * import chalk from 'chalk';
  *
  * splitLines(chalk.green('foo\nbar'));
- * // > ['\u001b[32mfoo\u001b[39m', '\u001b[32mbar\u001b[39m']
+ * // > ['\x1b[32mfoo\x1b[39m', '\x1b[32mbar\x1b[39m']
  * ```
  *
  * @param string - Input string to split.

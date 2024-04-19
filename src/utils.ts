@@ -39,7 +39,7 @@ export function parseEscape<T>(stack: AnsiEscape<T>[], seq: string, idx: T) {
             }
         } else {
             // add this hyperlink escape to the stack
-            stack.push([seq, true, '\u001B]8;;\u0007', idx]);
+            stack.push([seq, true, '\x1b]8;;\x07', idx]);
         }
     } else {
         // return null on a non SGR/hyperlink escape sequence
@@ -49,7 +49,7 @@ export function parseEscape<T>(stack: AnsiEscape<T>[], seq: string, idx: T) {
 }
 
 export function closeEscapes<T>(stack: AnsiEscape<T>[]) {
-    const escapes = stack.map(([, isLink, close]) => (isLink ? close : `\u001b[${close}m`));
+    const escapes = stack.map(([, isLink, close]) => (isLink ? close : `\x1b[${close}m`));
     let result = '';
     while (escapes.length) {
         const esc = escapes.pop();

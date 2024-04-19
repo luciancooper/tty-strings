@@ -2,11 +2,11 @@ import { stripAnsi } from '../src';
 
 describe('stripAnsi', () => {
     test('removes ansi sequences from strings', () => {
-        expect(stripAnsi('\u001b[32m\u001b[46mfoo\u001b[49m\u001b[39m')).toBe('foo');
+        expect(stripAnsi('\x1b[32m\x1b[46mfoo\x1b[49m\x1b[39m')).toBe('foo');
     });
 
     test('removes hyperlinks from strings', () => {
-        expect(stripAnsi('\u001B]8;;https://github.com\u0007foo\u001B]8;;\u0007')).toBe('foo');
+        expect(stripAnsi('\x1b]8;;https://github.com\x07foo\x1b]8;;\x07')).toBe('foo');
     });
 
     test('handles non string inputs', () => {

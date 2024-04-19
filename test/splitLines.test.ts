@@ -10,53 +10,53 @@ describe('splitLines', () => {
     });
 
     test('splits style escapes that span multiple lines', () => {
-        expect(splitLines('\u001b[41mAAA\u001b[33mBBB\nCCC\u001b[39mDDD\u001b[49m')).toEqual([
-            '\u001b[41mAAA\u001b[33mBBB\u001b[39m\u001b[49m',
-            '\u001b[41m\u001b[33mCCC\u001b[39mDDD\u001b[49m',
+        expect(splitLines('\x1b[41mAAA\x1b[33mBBB\nCCC\x1b[39mDDD\x1b[49m')).toEqual([
+            '\x1b[41mAAA\x1b[33mBBB\x1b[39m\x1b[49m',
+            '\x1b[41m\x1b[33mCCC\x1b[39mDDD\x1b[49m',
         ]);
     });
 
     test('splits style escapes that span a single line', () => {
-        expect(splitLines('\u001b[41mAAAA\u001b[49m\u001b[33m\nBBBB\u001b[39m')).toEqual([
-            '\u001b[41mAAAA\u001b[49m',
-            '\u001b[33mBBBB\u001b[39m',
+        expect(splitLines('\x1b[41mAAAA\x1b[49m\x1b[33m\nBBBB\x1b[39m')).toEqual([
+            '\x1b[41mAAAA\x1b[49m',
+            '\x1b[33mBBBB\x1b[39m',
         ]);
     });
 
     test('splits style escape sequences that overlap across a line break', () => {
-        expect(splitLines('\u001b[41mAAAA\u001b[33m\n\u001b[49mBBBB\u001b[39m')).toEqual([
-            '\u001b[41mAAAA\u001b[49m',
-            '\u001b[33mBBBB\u001b[39m',
+        expect(splitLines('\x1b[41mAAAA\x1b[33m\n\x1b[49mBBBB\x1b[39m')).toEqual([
+            '\x1b[41mAAAA\x1b[49m',
+            '\x1b[33mBBBB\x1b[39m',
         ]);
     });
 
     test('splits style escape sequences that span empty lines', () => {
-        expect(splitLines('\u001b[41m\nAAA\n\nBBB\u001b[49m')).toEqual([
+        expect(splitLines('\x1b[41m\nAAA\n\nBBB\x1b[49m')).toEqual([
             '',
-            '\u001b[41mAAA\u001b[49m',
+            '\x1b[41mAAA\x1b[49m',
             '',
-            '\u001b[41mBBB\u001b[49m',
+            '\x1b[41mBBB\x1b[49m',
         ]);
     });
 
     test('scrubs empty escape sequences', () => {
-        expect(splitLines('AA\u001b[41m\u001b[49mA\nBB')).toEqual(['AAA', 'BB']);
+        expect(splitLines('AA\x1b[41m\x1b[49mA\nBB')).toEqual(['AAA', 'BB']);
     });
 
     test('scrubs escape sequences that span only line breaks', () => {
-        expect(splitLines('AAAA\u001b[41m\n\u001b[49mBBBB')).toEqual(['AAAA', 'BBBB']);
+        expect(splitLines('AAAA\x1b[41m\n\x1b[49mBBBB')).toEqual(['AAAA', 'BBBB']);
     });
 
     test('supports ansi hyperlink escapes', () => {
-        expect(splitLines('\u001b]8;;link\u0007AA\nB\u001b]8;;\u0007b')).toEqual([
-            '\u001b]8;;link\u0007AA\u001b]8;;\u0007',
-            '\u001b]8;;link\u0007B\u001b]8;;\u0007b',
+        expect(splitLines('\x1b]8;;link\x07AA\nB\x1b]8;;\x07b')).toEqual([
+            '\x1b]8;;link\x07AA\x1b]8;;\x07',
+            '\x1b]8;;link\x07B\x1b]8;;\x07b',
         ]);
     });
 
     test('handles non-SGR/non-hyperlink ansi escape sequences', () => {
-        expect(splitLines('AA\u001B]0;window_title\u0007\nBB')).toEqual([
-            'AA\u001B]0;window_title\u0007',
+        expect(splitLines('AA\x1b]0;window_title\x07\nBB')).toEqual([
+            'AA\x1b]0;window_title\x07',
             'BB',
         ]);
     });

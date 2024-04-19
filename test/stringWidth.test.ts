@@ -18,11 +18,11 @@ describe('stringWidth', () => {
     });
 
     test('ignores ansi escape sequences', () => {
-        expect(stringWidth('\u001B[31mfoo\u001B[39m')).toBe(3);
+        expect(stringWidth('\x1b[31mfoo\x1b[39m')).toBe(3);
     });
 
     test('ignores ansi hyperlinks', () => {
-        expect(stringWidth('\u001B]8;;https://foo.com\u0007bar\u001B]8;;\u0007')).toBe(3);
+        expect(stringWidth('\x1b]8;;https://foo.com\x07bar\x1b]8;;\x07')).toBe(3);
     });
 
     test('returns 0 on non-string inputs', () => {
@@ -35,7 +35,7 @@ describe('stringWidth', () => {
     test('returns 0 on empty strings', () => {
         expect(stringWidth('')).toBe(0);
         // empty string with escape sequences
-        expect(stringWidth('\u001b[31m\u001b[39m')).toBe(0);
+        expect(stringWidth('\x1b[31m\x1b[39m')).toBe(0);
     });
 
     describe('measures emoji', () => {
