@@ -1,3 +1,5 @@
+import { equals, iterableEquality } from '@jest/expect-utils';
+import { printDiffOrStringify, type MatcherHintOptions } from 'jest-matcher-utils';
 import { stripAnsi } from '../src';
 
 declare global {
@@ -6,6 +8,7 @@ declare global {
         interface Matchers<R> {
             toMatchEachCodePoint: (expected?: number | boolean) => R
             toMatchEachSequence: (expected?: boolean) => R
+            toMatchAnsi: (expected: string | string[]) => R
         }
     }
 }
@@ -15,7 +18,45 @@ function hex(num: number) {
     return '0'.repeat(Math.max(0, 4 - h.length)) + h;
 }
 
+function escAnsi<T extends string | string[]>(arg: T): T {
+    if (typeof arg !== 'string') return arg.map(escAnsi) as T;
+    return arg.replace(/[\x1B\x9B\x07]/g, (s) => {
+        const cp = s.codePointAt(0)!.toString(16);
+        return `\\x${'0'.repeat(Math.max(0, 2 - cp.length))}${cp}`;
+    }) as T;
+}
+
 expect.extend({
+    toMatchAnsi(received: string | string[], expected: string | string[]) {
+        const options: MatcherHintOptions = this.isNot != null ? { isNot: this.isNot } : {};
+        let pass: boolean;
+        if (typeof expected === 'string') {
+            pass = Object.is(received, expected);
+            options.comment = 'Object.is equality';
+        } else {
+            pass = equals(received, expected, [...this.customTesters, iterableEquality]);
+            options.comment = 'deep equality';
+        }
+        return {
+            pass,
+            message: pass ? () => (
+                this.utils.matcherHint('toMatchAnsi', undefined, undefined, options)
+                + '\n\n'
+                + `Expected: not ${this.utils.printExpected(escAnsi(expected)).replace(/\\\\(?=x)/g, '\\')}`
+            ) : () => (
+                this.utils.matcherHint('toMatchAnsi', undefined, undefined, options)
+                + '\n\n'
+                + printDiffOrStringify(
+                    escAnsi(expected),
+                    escAnsi(received),
+                    'Expected',
+                    'Received',
+                    this.expand !== false,
+                ).replace(/\\\\(?=x)/g, '\\')
+            ),
+        };
+    },
+
     toMatchEachCodePoint(
         received: [number, number | boolean, (number | boolean)?][],
         expected?: number | boolean,
