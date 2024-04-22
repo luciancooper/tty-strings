@@ -61,14 +61,23 @@ describe('wordWrap', () => {
 
     test('handles empty input strings', () => {
         expect(wordWrap('', 6)).toBe('');
-        // empty escape sequence
+        // empty sgr escape sequence
         expect(wordWrap('\x1b[31m\x1b[39m', 6)).toMatchAnsi('');
+        // empty compound sgr escape sequence
+        expect(wordWrap('\x1b[31;39m', 6)).toMatchAnsi('');
     });
 
     test('wraps ansi escape sequences', () => {
         expect(wordWrap('aa \x1b[31mbbb ccc\x1b[39m dd', 6)).toMatchAnsi(
             'aa \x1b[31mbbb\x1b[39m\n'
             + '\x1b[31mccc\x1b[39m dd',
+        );
+    });
+
+    test('wraps compound sgr escape sequences', () => {
+        expect(wordWrap('aa \x1b[31;42mbbb ccc\x1b[39;49m dd', 6)).toMatchAnsi(
+            'aa \x1b[31;42mbbb\x1b[49;39m\n'
+            + '\x1b[31;42mccc\x1b[49;39m dd',
         );
     });
 
@@ -95,15 +104,15 @@ describe('wordWrap', () => {
 
     test('wraps text with both foreground and background styling', () => {
         expect(wordWrap('\x1b[41maa b\x1b[32mbb cc\x1b[39mc dd\x1b[49m', 6)).toMatchAnsi(
-            '\x1b[41maa b\x1b[32mbb\x1b[39m\x1b[49m\n'
-            + '\x1b[41m\x1b[32mcc\x1b[39mc dd\x1b[49m',
+            '\x1b[41maa b\x1b[32mbb\x1b[39;49m\n'
+            + '\x1b[41;32mcc\x1b[39mc dd\x1b[49m',
         );
     });
 
     test('hard wraps words with both foreground and background styling', () => {
         expect(wordWrap('\x1b[41maaa \x1b[32mbbbbbbb\x1b[39m\x1b[49m', 6, { hard: true })).toMatchAnsi(
-            '\x1b[41maaa \x1b[32mbb\x1b[39m\x1b[49m\n'
-            + '\x1b[41m\x1b[32mbbbbb\x1b[39m\x1b[49m',
+            '\x1b[41maaa \x1b[32mbb\x1b[39;49m\n'
+            + '\x1b[41;32mbbbbb\x1b[39m\x1b[49m',
         );
     });
 
@@ -142,14 +151,21 @@ describe('wordWrap', () => {
     test('handles escape sequences that span multiple input lines', () => {
         expect(wordWrap('\x1b[41maaaa \x1b[33mbbb\nccc\x1b[39m dd\x1b[49m', 6)).toMatchAnsi(
             '\x1b[41maaaa\x1b[49m\n'
-            + '\x1b[41m\x1b[33mbbb\x1b[39m\x1b[49m\n'
-            + '\x1b[41m\x1b[33mccc\x1b[39m dd\x1b[49m',
+            + '\x1b[41;33mbbb\x1b[39;49m\n'
+            + '\x1b[41;33mccc\x1b[39m dd\x1b[49m',
         );
     });
 
     test('handles ESC[0m reset escape codes', () => {
         expect(wordWrap('\x1b[41maa \x1b[32mbb \x1b[0mccc', 6)).toMatchAnsi(
             '\x1b[41maa \x1b[32mbb\x1b[0m\n'
+            + 'ccc',
+        );
+    });
+
+    test('handles compound sgr sequences with both opening and reset ESC[0m codes', () => {
+        expect(wordWrap('aa \x1b[0;32mbb \x1b[0mccc', 6)).toMatchAnsi(
+            'aa \x1b[32mbb\x1b[0m\n'
             + 'ccc',
         );
     });
@@ -162,7 +178,7 @@ describe('wordWrap', () => {
         );
     });
 
-    test('ignores non-SGR/non-hyperlink ansi escape sequences', () => {
+    test('scrubs non SGR/hyperlink escape sequences', () => {
         // contains a window title escape sequence
         expect(wordWrap('aa bbb\x1b]0;window_title\x07 ccc', 6)).toMatchAnsi(
             'aa bbb\n'
@@ -170,11 +186,26 @@ describe('wordWrap', () => {
         );
     });
 
+    test('scrubs non SGR/hyperlink escape sequences when hard wrapping', () => {
+        // contains a cursor up escape sequence
+        expect(wordWrap('aaaaaa\x1b[Aaaa cc', 6, { hard: true })).toMatchAnsi(
+            'aaaaaa\n'
+            + 'aaa cc',
+        );
+    });
+
     test('does not add unnecessary closing escape sequences', () => {
         // multiple opening bg codes should both be closed by a single `ESC[49m`
         expect(wordWrap('\x1b[45maa \x1b[41mbbb ccc \x1b[49mdd', 6)).toMatchAnsi(
             '\x1b[45maa \x1b[41mbbb\x1b[49m\n'
-            + '\x1b[45m\x1b[41mccc \x1b[49mdd',
+            + '\x1b[45;41mccc \x1b[49mdd',
+        );
+    });
+
+    test('handles compound sgr sequences with both opening and closing codes', () => {
+        expect(wordWrap('\x1b[45maa \x1b[49;31mbbb ccc\x1b[39m dd', 6)).toMatchAnsi(
+            '\x1b[45maa \x1b[49m\x1b[31mbbb\x1b[39m\n'
+            + '\x1b[31mccc\x1b[39m dd',
         );
     });
 
@@ -191,11 +222,26 @@ describe('wordWrap', () => {
             );
         });
 
+        test('compound sequence should be split between rows', () => {
+            expect(wordWrap('aaa \x1b[32mbb \x1b[41;39mcc\x1b[49m', 6)).toMatchAnsi(
+                'aaa \x1b[32mbb\x1b[39m\n'
+                + '\x1b[41mcc\x1b[49m',
+            );
+        });
+
         test('should not wrap to the next row when the word is hard wrapped', () => {
             expect(wordWrap('aa \x1b[32mbb \x1b[39mccccccc ddd', 6, { hard: true })).toMatchAnsi(
                 'aa \x1b[32mbb\x1b[39m\n'
                 + 'cccccc\n'
                 + 'c ddd',
+            );
+        });
+
+        test('compound sequence should be split between rows when the word is hard wrapped', () => {
+            expect(wordWrap('aa \x1b[32mbb \x1b[41;39mccccccc\x1b[49m ddd', 6, { hard: true })).toMatchAnsi(
+                'aa \x1b[32mbb\x1b[39m\n'
+                + '\x1b[41mcccccc\x1b[49m\n'
+                + '\x1b[41mc\x1b[49m ddd',
             );
         });
     });
@@ -208,9 +254,24 @@ describe('wordWrap', () => {
             );
         });
 
+        test('compound sequence should be split between rows', () => {
+            expect(wordWrap('\x1b[31maaa\x1b[41;39m bbb\x1b[49m cc', 6)).toMatchAnsi(
+                '\x1b[31maaa\x1b[39m\n'
+                + '\x1b[41mbbb\x1b[49m cc',
+            );
+        });
+
         test('should wrap to the next row when the following word is hard wrapped', () => {
             expect(wordWrap('aaa\x1b[41m  bbbbbbbb\x1b[49m ccc', 6, { hard: true })).toMatchAnsi(
                 'aaa\n'
+                + '\x1b[41mbbbbbb\x1b[49m\n'
+                + '\x1b[41mbb\x1b[49m ccc',
+            );
+        });
+
+        test('compound sequence should be split between rows when the following word is hard wrapped', () => {
+            expect(wordWrap('\x1b[31maaa\x1b[41;39m  bbbbbbbb\x1b[49m ccc', 6, { hard: true })).toMatchAnsi(
+                '\x1b[31maaa\x1b[39m\n'
                 + '\x1b[41mbbbbbb\x1b[49m\n'
                 + '\x1b[41mbb\x1b[49m ccc',
             );
@@ -255,15 +316,22 @@ describe('wordWrap', () => {
                 + '\x1b[32mbbbb c\x1b[39m',
             );
         });
+
+        test('compound opening & closing escape sequences should wrap to their respective rows', () => {
+            expect(wordWrap('\x1b[41maa bbb\x1b[32;49mbbbb c\x1b[39m', 6, { hard: true })).toMatchAnsi(
+                '\x1b[41maa bbb\x1b[49m\n'
+                + '\x1b[32mbbbb c\x1b[39m',
+            );
+        });
     });
 
     describe('empty escape sequences', () => {
         test('should be scrubbed from words', () => {
-            expect(wordWrap('aa\x1b[33m\x1b[39m b\x1b]8;;link\x07\x1b]8;;\x07bb', 6)).toMatchAnsi('aa bbb');
+            expect(wordWrap('aa\x1b[33m\x1b[39m b\x1b]8;;link\x07\x1b]8;;\x07b\x1b[43;49mb', 6)).toMatchAnsi('aa bbb');
         });
 
         test('should be scrubbed from hard-wrapped words', () => {
-            expect(wordWrap('aa \x1b[31m\x1b[39mbbb\x1b[32m\x1b[39mbbbb\x1b[33m\x1b[39m c', 6, {
+            expect(wordWrap('aa \x1b[31m\x1b[39mbbb\x1b[32m\x1b[39mbbbb\x1b[33;39m c', 6, {
                 hard: true,
             })).toMatchAnsi(
                 'aa bbb\n'
@@ -272,7 +340,7 @@ describe('wordWrap', () => {
         });
 
         test('should be scrubbed from whitespace', () => {
-            expect(wordWrap('aa \x1b]8;;link\x07\x1b]8;;\x07 bb cc \x1b[31m\x1b[39m', 6)).toMatchAnsi(
+            expect(wordWrap('aa \x1b]8;;link\x07\x1b]8;;\x07 bb \x1b[41;49m cc \x1b[31m\x1b[39m', 6)).toMatchAnsi(
                 'aa  bb\n'
                 + 'cc',
             );
@@ -285,14 +353,14 @@ describe('wordWrap', () => {
         });
 
         test('should be scrubbed from hard-wrapped words', () => {
-            expect(wordWrap('aa bbbbb\x1b[49mbb\x1b]8;;\x07 c', 6, { hard: true })).toMatchAnsi(
+            expect(wordWrap('aa b\x1b[39;0mbbbb\x1b[49mbb\x1b]8;;\x07 c', 6, { hard: true })).toMatchAnsi(
                 'aa bbb\n'
                 + 'bbbb c',
             );
         });
 
         test('should be scrubbed from whitespace', () => {
-            expect(wordWrap('aa bbb cc \x1b[49m dd \x1b]8;;\x07', 6)).toMatchAnsi(
+            expect(wordWrap('aa bbb cc \x1b[0;49m dd \x1b]8;;\x07', 6)).toMatchAnsi(
                 'aa bbb\n'
                 + 'cc  dd',
             );
@@ -308,6 +376,14 @@ describe('wordWrap', () => {
             );
         });
 
+        test('should be scrubbed from compound sequences in words', () => {
+            // the extra 33; in `ESC[33;39m` should not appear in the result
+            expect(wordWrap('\x1b[31maa bbb\x1b[33;39m ccc', 6)).toMatchAnsi(
+                '\x1b[31maa bbb\x1b[39m\n'
+                + 'ccc',
+            );
+        });
+
         test('should be scrubbed from hard-wrapped words', () => {
             // the extra `ESC[33m` sequence should not appear in the result
             expect(wordWrap('aa \x1b[31mbbbbb\x1b[33m\x1b[39mbb c', 6, { hard: true })).toMatchAnsi(
@@ -316,9 +392,25 @@ describe('wordWrap', () => {
             );
         });
 
+        test('should be scrubbed from compound sequences in hard-wrapped words', () => {
+            // the extra 33; in `ESC[33;39m` should not appear in the result
+            expect(wordWrap('aa \x1b[31mbbbbb\x1b[33;39mbb c', 6, { hard: true })).toMatchAnsi(
+                'aa \x1b[31mbbb\x1b[39m\n'
+                + '\x1b[31mbb\x1b[39mbb c',
+            );
+        });
+
         test('should be scrubbed from whitespace', () => {
             // the extra `ESC[43m` sequence should not appear in the result
             expect(wordWrap('aa \x1b[41mbbb cc \x1b[43m\x1b[49m dd', 6)).toMatchAnsi(
+                'aa \x1b[41mbbb\x1b[49m\n'
+                + '\x1b[41mcc \x1b[49m dd',
+            );
+        });
+
+        test('should be scrubbed from compound sequences in whitespace', () => {
+            // the extra 43; in `ESC[43;49m` should not appear in the result
+            expect(wordWrap('aa \x1b[41mbbb cc \x1b[43;49m dd', 6)).toMatchAnsi(
                 'aa \x1b[41mbbb\x1b[49m\n'
                 + '\x1b[41mcc \x1b[49m dd',
             );
@@ -379,7 +471,7 @@ describe('wordWrap', () => {
         });
 
         test('can be trimmed from the beginning of a line', () => {
-            expect(wordWrap('\x1b[41m \x1b[49m a bb c', 6)).toMatchAnsi('a bb c');
+            expect(wordWrap('\x1b[41m \x1b[31;49m a bb\x1b[39m c', 6)).toMatchAnsi('\x1b[31ma bb\x1b[39m c');
         });
 
         describe('when the opening sequence is at the boundary of the prior word', () => {
@@ -513,7 +605,7 @@ describe('wordWrap', () => {
                     trimLeft: false,
                 })).toMatchAnsi(
                     '\x1b[33maaaa\x1b[39m\n'
-                    + '\x1b[33m\x1b[41m      \x1b[49m\x1b[39m\n'
+                    + '\x1b[33;41m      \x1b[49m\x1b[39m\n'
                     + '\x1b[33maaa\x1b[39m bb',
                 );
             });

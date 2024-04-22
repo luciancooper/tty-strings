@@ -1,5 +1,5 @@
 import parseAnsi from './parseAnsi';
-import { parseEscape, closeEscapes, type AnsiEscape } from './utils';
+import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 
 /**
  * Split a string with ANSI escape codes into an array of lines.
@@ -40,8 +40,7 @@ export default function splitLines(string: string): string[] {
                 const closed = parseEscape(ansiStack, chunk, [i, j]);
                 if (closed && j >= 0) {
                     // append escape if it closes an active item in the stack
-                    const [xi, xj] = closed;
-                    if (xi < i || (xi === i && xj < j)) line += chunk;
+                    line += closeEscapes(closed.filter(([,,, [xi, xj]]) => xi < i || (xi === i && xj < j)));
                 } else if (closed === null) {
                     // escape is not a SGR/hyperlink escape
                     line += chunk;
@@ -49,9 +48,7 @@ export default function splitLines(string: string): string[] {
                 continue;
             }
             // append any new escape sequences from the ansi stack
-            line += (j < 0 ? ansiStack : ansiStack.filter(([,,, [xi, xj]]) => (xi === i && xj === j)))
-                .map(([s]) => s)
-                .join('');
+            line += openEscapes(j < 0 ? ansiStack : ansiStack.filter(([,,, [xi, xj]]) => (xi === i && xj === j)));
             // append this chunk
             line += chunk;
             // increment the intraline index

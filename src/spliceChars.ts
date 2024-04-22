@@ -1,5 +1,5 @@
 import parseAnsi from './parseAnsi';
-import { parseEscape, type AnsiEscape } from './utils';
+import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 import splitChars from './splitChars';
 import stringLength from './stringLength';
 
@@ -47,10 +47,11 @@ export default function spliceChars(string: string, start: number, deleteCount: 
             // check if insert point has been reached or if chunk is not a SGR/hyperlink escape
             if (closed === null || (!startFound && (idx < startIndex || insert))) {
                 result += chunk;
-            } else if (closed != null) {
-                // append escape if it closes an active escape
-                const [x, afterStart] = closed;
-                if (!afterStart && (x < startIndex || insert)) result += chunk;
+            } else if (closed.length) {
+                // add close sequences for any active escapes in the stack
+                result += closeEscapes(closed.filter(([,,, [x, afterStart]]) => (
+                    !afterStart && (x < startIndex || insert)
+                )));
             }
             // increment conventional string index
             i += chunk.length;
@@ -60,12 +61,11 @@ export default function spliceChars(string: string, start: number, deleteCount: 
         if (endFound) {
             return result
                 // append any open escapes found after the insert point
-                + ansiStack
-                    .filter(([,,, [x, afterStart]]) => afterStart || (x === startIndex && !insert))
-                    .map(([s]) => s)
-                    .join('')
-                    // add the rest of the string
-                    + string.slice(i);
+                + openEscapes(ansiStack.filter(([,,, [x, afterStart]]) => (
+                    afterStart || (x === startIndex && !insert)
+                )))
+                // add the rest of the string
+                + string.slice(i);
         }
         // iterate through the characters in this chunk
         for (const char of splitChars(chunk)) {
@@ -81,12 +81,11 @@ export default function spliceChars(string: string, start: number, deleteCount: 
                 if (idx === endIndex) {
                     return result
                         // append any open escapes found after the insert point
-                        + ansiStack
-                            .filter(([,,, [x, afterStart]]) => afterStart || (x === startIndex && !insert))
-                            .map(([s]) => s)
-                            .join('')
-                            // add the rest of the string
-                            + string.slice(i);
+                        + openEscapes(ansiStack.filter(([,,, [x, afterStart]]) => (
+                            afterStart || (x === startIndex && !insert)
+                        )))
+                        // add the rest of the string
+                        + string.slice(i);
                 }
             }
             // increment char index

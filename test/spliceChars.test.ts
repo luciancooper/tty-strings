@@ -42,6 +42,23 @@ describe('spliceChars', () => {
             expect(spliceChars(`${chalk.green('a')}b${chalk.red('def')}`, 2, 0, 'C'))
                 .toMatchAnsi(`${chalk.green('a')}bC${chalk.red('def')}`);
         });
+
+        test('between compound sgr escape sequences', () => {
+            // insert into first stretch of sgr styled text
+            expect(spliceChars('\x1b[31;42mab\x1b[39;49m\x1b[32;41mef\x1b[39;49m', 2, 0, 'CD'))
+                .toMatchAnsi('\x1b[31;42mabCD\x1b[49;39m\x1b[32;41mef\x1b[39;49m');
+            // insert into second stretch of sgr styled text
+            expect(spliceChars('\x1b[31;42mab\x1b[39;49m\x1b[32;41mcf\x1b[39;49m', 3, 0, 'DE'))
+                .toMatchAnsi('\x1b[31;42mab\x1b[39;49m\x1b[32;41mcDEf\x1b[39;49m');
+            // insert between stretches of sgr styled text
+            expect(spliceChars('\x1b[31;42ma\x1b[39;49mb\x1b[32;41mdef\x1b[39;49m', 2, 0, 'C'))
+                .toMatchAnsi('\x1b[31;42ma\x1b[39;49mbC\x1b[32;41mdef\x1b[39;49m');
+        });
+
+        test('preserves non sgr/hyperlink escape sequences', () => {
+            // right before ESC[A control sequence
+            expect(spliceChars('ab\x1b[Aef', 2, 0, 'CD')).toMatchAnsi('abCD\x1b[Aef');
+        });
     });
 
     describe('deleting characters', () => {
@@ -78,6 +95,11 @@ describe('spliceChars', () => {
             // from the second character
             expect(spliceChars(chalk.green('abcdef'), 2, 8)).toMatchAnsi(chalk.green('ab'));
         });
+
+        test('preserves non sgr/hyperlink escape sequences', () => {
+            // across a ESC[A control sequence
+            expect(spliceChars('ab\x1b[Acd', 1, 2)).toMatchAnsi('a\x1b[Ad');
+        });
     });
 
     describe('replacing characters', () => {
@@ -91,8 +113,8 @@ describe('spliceChars', () => {
 
         test('in the middle of a string', () => {
             expect(spliceChars('abcdef', 2, 2, 'CD')).toBe('abCDef');
-            expect(spliceChars(chalk.green('ab') + chalk.bgRed.yellow('cdef'), 2, 2, 'CD'))
-                .toMatchAnsi(chalk.green('abCD') + chalk.bgRed.yellow('ef'));
+            expect(spliceChars('\x1b[32mab\x1b[39m\x1b[41m\x1b[33mcdef\x1b[39m\x1b[49m', 2, 2, 'CD'))
+                .toMatchAnsi('\x1b[32mabCD\x1b[39m\x1b[41;33mef\x1b[39m\x1b[49m');
         });
 
         test('at the end of a string', () => {
@@ -105,6 +127,11 @@ describe('spliceChars', () => {
             expect(spliceChars('abcdef', 0, 6, 'ABCDEF')).toBe('ABCDEF');
             expect(spliceChars(chalk.bgRed(chalk.green('abc') + chalk.yellow('def')), 0, 6, 'ABCDEF'))
                 .toMatchAnsi(chalk.bgRed.green('ABCDEF'));
+        });
+
+        test('preserves non sgr/hyperlink escape sequences', () => {
+            // before a ESC[A control sequence
+            expect(spliceChars('ab\x1b[Acd', 1, 2, 'BC')).toMatchAnsi('aBC\x1b[Ad');
         });
     });
 });

@@ -1,5 +1,5 @@
 import parseAnsi from './parseAnsi';
-import { parseEscape, closeEscapes, type AnsiEscape } from './utils';
+import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 import splitChars from './splitChars';
 import charWidths from './charWidths';
 import stringLength from './stringLength';
@@ -33,16 +33,25 @@ function createSlicer(
             // current slice index
             idx = 0,
             // current stack index
-            ax = -1;
+            ax = -1,
+            // queued ansi stack closings
+            closedStack: AnsiEscape<number>[] = [];
         // match all ansi escape codes
         for (const [chunk, isEscape] of parseAnsi(string)) {
             // check if chunk is an escape sequence
             if (isEscape) {
                 // process this escape sequence
                 const closed = parseEscape(ansiStack, chunk, idx);
-                // add sequence to result if it closes an active item in the stack
-                if (closed != null && closed <= ax) result += chunk;
+                // add any newly closed sequences to the closed stack
+                if (closed?.length) closedStack.unshift(...closed);
                 continue;
+            }
+            // check if any unclosed sequences have accumulated
+            if (closedStack.length) {
+                // close acumulated ansi sequences
+                result += closeEscapes(closedStack.filter(([,,, cx]) => cx <= ax));
+                // reset the closed stack
+                closedStack = [];
             }
             // store the value of the slice index at the outset of this chunk
             const sidx = idx;
@@ -52,7 +61,7 @@ function createSlicer(
                 if ((beginIndex < idx || (beginIndex === idx && span > 0)) && idx + span <= endIndex) {
                     // check if the stack index is less than the slice index at the start of this chunk
                     if (ax < sidx) {
-                        result += ansiStack.filter(([,,, x]) => x > ax).map(([s]) => s).join('');
+                        result += openEscapes(ansiStack.filter(([,,, x]) => x > ax));
                         ax = sidx;
                     }
                     // add char to the result
@@ -68,7 +77,7 @@ function createSlicer(
             }
         }
         // close active items in the escape stack and return the result slice
-        return result + closeEscapes(ansiStack.filter(([,,, x]) => x <= ax));
+        return result + closeEscapes([...closedStack, ...ansiStack].filter(([,,, x]) => x <= ax));
     };
 }
 

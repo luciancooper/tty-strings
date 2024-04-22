@@ -1,5 +1,5 @@
 import parseAnsi from './parseAnsi';
-import { parseEscape, closeEscapes, AnsiEscape } from './utils';
+import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 import charWidths from './charWidths';
 import stringWidth from './stringWidth';
 
@@ -34,13 +34,13 @@ function wrapLine(
     // split the input string into words and measure each one
     const words = string.split(' ').map((word) => [word, stringWidth(word)] as const);
     // loop through each word
-    words.forEach(([word, len], ix) => {
+    for (const [ix, [word, len]] of words.entries()) {
         // if this is not the first word
         if (ix > 0) {
             // increment the length of the current row if a space must be added before this word
             if (rl > 0 || (!ltrim && ax < 0)) rl += 1;
             // update preserved space with any new escapes found up through the end of the previous word
-            space += ansiStack.filter(([,,, [x, y]]) => (x > sx || (x === sx && y > ay))).map(([s]) => s).join('');
+            space += openEscapes(ansiStack.filter(([,,, [x, y]]) => (x > sx || (x === sx && y > ay))));
             // set the preserved space's active point in the ansi stack to the end of the last word
             sx = ix;
             // update accumulated space
@@ -69,16 +69,15 @@ function wrapLine(
                 if (isEscape) {
                     // parse the matched ansi escape sequence
                     const closed = parseEscape(ansiStack, chunk, [ix, iy]);
-                    if (closed != null) {
-                        const [cx, cy] = closed;
+                    if (closed?.length) {
                         if (ax < ix) {
-                            // check if sequence closes an active escape in the current row
-                            if (cx < ax || (cx === ax && cy <= ay)) trimmed += chunk;
-                            // check if sequence closes an active escape in the current row or preserved space
-                            if (cx < sx) space += chunk;
-                        } else if (rl && (cx < ax || cy <= ay)) {
-                            // sequence closes a currently active escape
-                            row += chunk;
+                            // filter for active escapes in the current row
+                            trimmed += closeEscapes(filterStack(closed, ax, ay));
+                            // filter for active escapes in the current row or preserved space
+                            space += closeEscapes(closed.filter(([,,, [cx]]) => cx < sx));
+                        } else if (rl) {
+                            // filter for currently active escapes
+                            row += closeEscapes(filterStack(closed, ax, ay));
                         }
                     }
                     continue;
@@ -96,9 +95,9 @@ function wrapLine(
                     }
                     row += rl
                         // non-empty row - append preserved space & any escape sequences opened within this word
-                        ? space + ansiStack.filter(([,,, [x]]) => x === ix).map(([s]) => s).join('')
+                        ? space + openEscapes(ansiStack.filter(([,,, [x]]) => x === ix))
                         // row is empty - initialize it with all active escape sequences
-                        : ansiStack.map(([s]) => s).join('');
+                        : openEscapes(ansiStack);
                     // set the active point in the ansi stack to the beginning of the current word
                     [ax, ay] = [ix, 0];
                     // clear preserved space
@@ -113,16 +112,12 @@ function wrapLine(
                         // finalize the current row
                         rows.push(row + closeEscapes(filterStack(ansiStack, ax, ay)));
                         // initialize a new row with all currently active escape sequences
-                        [rl, row] = [0, ansiStack.map(([s]) => s).join('')];
+                        [rl, row] = [0, openEscapes(ansiStack)];
                     }
                     // see if the intra-word index of the active point in the ansi stack needs to be updated
                     if (ay < sy) {
                         // if row is not empty, add all new escape sequences from the ansi stack
-                        if (rl) {
-                            row += ansiStack
-                                .filter(([,,, [x, y]]) => (x === ax && ay < y))
-                                .map(([s]) => s).join('');
-                        }
+                        if (rl) row += openEscapes(ansiStack.filter(([,,, [x, y]]) => (x === ax && ay < y)));
                         // update the active point in the ansi stack to the beginning of the current chunk
                         ay = sy;
                     }
@@ -133,7 +128,7 @@ function wrapLine(
                     iy += w;
                 }
             }
-            return;
+            continue;
         }
         // index location within the current word
         let iy = 0;
@@ -143,16 +138,15 @@ function wrapLine(
             if (isEscape) {
                 // parse the matched ansi escape sequence
                 const closed = parseEscape(ansiStack, chunk, [ix, iy]);
-                if (closed != null) {
-                    const [cx, cy] = closed;
+                if (closed?.length) {
                     if (ax < ix) {
-                        // check if sequence closes an active escape in the current row
-                        if (cx < ax || (cx === ax && cy <= ay)) trimmed += chunk;
-                        // check if sequence closes an active escape in the current row or preserved space
-                        if (cx < sx) space += chunk;
-                    } else if (rl && (cx < ax || cy <= ay)) {
-                        // sequence closes a currently active escape
-                        row += chunk;
+                        // filter for active escapes in the current row
+                        trimmed += closeEscapes(filterStack(closed, ax, ay));
+                        // filter for active escapes in the current row or preserved space
+                        space += closeEscapes(closed.filter(([,,, [cx]]) => cx < sx));
+                    } else if (rl) {
+                        // filter for currently active escapes
+                        row += closeEscapes(filterStack(closed, ax, ay));
                     }
                 }
                 continue;
@@ -174,9 +168,9 @@ function wrapLine(
                 }
                 row += rl
                     // non-empty row - append preserved space & any escape sequences opened within this word
-                    ? space + ansiStack.filter(([,,, [x]]) => x === ix).map(([s]) => s).join('')
+                    ? space + openEscapes(ansiStack.filter(([,,, [x]]) => x === ix))
                     // row is empty - initialize it with all active escape sequences
-                    : ansiStack.map(([s]) => s).join('');
+                    : openEscapes(ansiStack);
                 // add the length of this word to the current row length
                 rl += len;
                 // set the active point in the ansi stack to the beginning of the current word
@@ -189,7 +183,7 @@ function wrapLine(
             // see if the intra-word index of the active point in the ansi stack needs to be updated
             if (ay < iy) {
                 // add any new opening escapes to the current row (rl will always be > 0 here)
-                row += ansiStack.filter(([,,, [x, y]]) => (x === ax && ay < y)).map(([s]) => s).join('');
+                row += openEscapes(ansiStack.filter(([,,, [x, y]]) => (x === ax && ay < y)));
                 // update the active point in the ansi stack to the beginning of the current chunk
                 ay = iy;
             }
@@ -205,17 +199,15 @@ function wrapLine(
             // start a new row
             [rl, row] = [0, ''];
             // reset space with all currently active escapes prior to `sx`
-            space = filterStack(ansiStack, sx, ay).map(([s]) => s).join('');
+            space = openEscapes(filterStack(ansiStack, sx, ay));
             // clear trimmed space
             trimmed = '';
         }
-    });
+    }
     // finalize the last row if necessary
     if (rl > 0) rows.push(row + trimmed + closeEscapes(filterStack(ansiStack, ax, ay)));
     // update the indexes of any escape sequences that remain in the stack
-    ansiStack.forEach((esc) => {
-        esc[3] = [-1, 0];
-    });
+    for (const esc of ansiStack) esc[3] = [-1, 0];
     // return wrapped rows
     return ax >= 0 ? rows.join('\n') : '';
 }
