@@ -2,10 +2,11 @@ import parseAnsi from './parseAnsi';
 import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 
 /**
- * Split a string with ANSI escape codes into an array of lines.
+ * Split a string with ANSI escape codes into an array of lines. Supports both `CRLF` and `LF` newlines.
  *
  * @remarks
- * Supports both `CRLF` and `LF` newlines.
+ * ANSI escape codes that are style and hyperlink sequences will be wrapped across the output lines,
+ * while all other types of control sequences will be ignored but preserved in the output.
  *
  * @example
  * ```ts

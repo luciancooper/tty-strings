@@ -4,9 +4,13 @@ import splitChars from './splitChars';
 import stringLength from './stringLength';
 
 /**
- * Insert, remove or replace characters from a string, similar to the native `Array.splice()` method.
+ * Insert, remove or replace characters from a string, similar to the native `Array.splice()` method,
+ * except that the start index and delete count refer to grapheme clusters within the string.
+ *
+ * @remarks
  * String may contain ANSI escape codes; inserted content will adopt any ANSI styling applied to the character
- * immediately preceding the insert point.
+ * immediately preceding the insert point. ANSI control sequences that are not style or hyperlink sequences
+ * will be preserved in the output string.
  *
  * @example
  * ```ts

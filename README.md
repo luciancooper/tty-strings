@@ -103,7 +103,9 @@ stringWidth('🧑🏻‍🤝‍🧑🏼');
 
 ### `wordWrap(string, columns, [options])`
 
-Word wrap text to a specified column width. Input string may contain ANSI escape codes.
+Word wrap text to a specified column width.
+
+Input string may contain ANSI escape codes. Style and hyperlink sequences will be wrapped, while all other types of control sequences will be ignored and will not be included in the output string.
 
 * `string` - Text to word wrap.
 * `columns` - Column width to wrap text to.
@@ -144,7 +146,9 @@ console.log(wordWrap(text, 20));
 
 ### `sliceChars(string, [beginIndex, [endIndex]])`
 
-Slice a string by character index. Behaves like the native [String.slice()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice), except that indexes refer to grapheme clusters within the string, and it handles ANSI escape sequences.
+Slice a string by character index. Behaves like the native [String.slice()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice), except that indexes refer to grapheme clusters within the string.
+
+Input string may contain ANSI escape sequences. Style and hyperlink sequences that apply to the sliced portion of the string will be preserved, while all other types of control sequences will be ignored and will not be included in the output slice.
 
  * `string` - Input string to slice.
  * `beginIndex` - Character index (defaults to `0`) at which to begin the slice. Negative values specify a position measured from the character length of the string.
@@ -163,7 +167,9 @@ sliceChars('🙈🙉🙊', 0, 2);
 
 ### `sliceColumns(string, [beginIndex, [endIndex]])`
 
-Slice a string by column index. Behaves like the native [String.slice()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice), except that indexes account for the visual width of each character, and it handles ANSI escape sequences.
+Slice a string by column index. Behaves like the native [String.slice()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice), except that indexes account for the visual width of each character.
+
+Input string may contain ANSI escape sequences. Style and hyperlink sequences that apply to the sliced portion of the string will be preserved, while all other types of control sequences will be ignored and will not be included in the output slice.
 
  * `string` - Input string to slice.
  * `beginIndex` - Column index (defaults to `0`) at which to begin the slice. Negative values specify a position measured from the visual width of the string.
@@ -184,7 +190,9 @@ sliceColumns('🙈🙉🙊', 0, 2);
 
 ### `spliceChars(string, start, deleteCount, [insert])`
 
-Insert, remove or replace characters from a string, similar to the native [`Array.splice()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice) method. String may contain ANSI escape codes; inserted content will adopt any ANSI styling applied to the character immediately preceding the insert point.
+Insert, remove or replace characters from a string, similar to the native [`Array.splice()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice) method, except that the start index and delete count refer to grapheme clusters within the string.
+
+String may contain ANSI escape codes; inserted content will adopt any ANSI styling applied to the character immediately preceding the insert point. ANSI control sequences that are not style or hyperlink sequences will be preserved in the output string.
 
  * `string` - Input string to remove, insert, or replace characters from.
  * `start` - Character index at which to begin splicing. Negative values specify a position measured from the character length of the string.
@@ -205,6 +213,8 @@ spliceChars('à̰ b̸ ĉ̥', 2, 1, 'x͎͛ÿz̯̆');
 ### `splitLines(string)`
 
 Split a string with ANSI escape codes into an array of lines. Supports both `CRLF` and `LF` newlines.
+
+ANSI escape codes that are style and hyperlink sequences will be wrapped across the output lines, while all other types of control sequences will be ignored but preserved in the output.
 
  * `string` - Input string to split.
 

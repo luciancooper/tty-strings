@@ -230,7 +230,11 @@ export interface WordWrapOptions {
 }
 
 /**
- * Word wrap text to a specified column width. Input string may contain ANSI escape codes.
+ * Word wrap text to a specified column width.
+ *
+ * @remarks
+ * Input string may contain ANSI escape codes. Style and hyperlink sequences will be wrapped, while all
+ * other types of control sequences will be ignored and will not be included in the output string.
  *
  * @example
  * ```ts

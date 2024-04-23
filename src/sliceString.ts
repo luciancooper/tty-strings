@@ -83,8 +83,13 @@ function createSlicer(
 
 /**
  * Slice a string by character index. Behaves like the native `String.slice()`, except that indexes refer
- * to grapheme clusters within the string, and it handles ANSI escape sequences. Negative index values specify
- * a position measured from the character length of the string.
+ * to grapheme clusters within the string. Negative index values specify a position measured from the
+ * character length of the string.
+ *
+ * @remarks
+ * Input string may contain ANSI escape sequences. Style and hyperlink sequences that apply to the
+ * sliced portion of the string will be preserved, while all other types of control sequences will be
+ * ignored and will not be included in the output slice.
  *
  * @example
  * ```ts
@@ -107,8 +112,13 @@ export const sliceChars = createSlicer(
 
 /**
  * Slice a string by column index. Behaves like the native `String.slice()`, except that indexes account
- * for the visual width of each character, and it handles ANSI escape sequences. Negative index values specify
- * a position measured from the visual width of the string.
+ * for the visual width of each character. Negative index values specify a position measured from the
+ * visual width of the string.
+ *
+ * @remarks
+ * Input string may contain ANSI escape sequences. Style and hyperlink sequences that apply to the
+ * sliced portion of the string will be preserved, while all other types of control sequences will be
+ * ignored and will not be included in the output slice.
  *
  * @example
  * ```ts
