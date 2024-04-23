@@ -163,9 +163,25 @@ describe('wordWrap', () => {
         );
     });
 
+    test('handles ESC[m implied reset escape codes', () => {
+        // when no code is given on an sgr escape, it is treated as a reset code
+        expect(wordWrap('\x1b[41maa \x1b[32mbb \x1b[mccc', 6)).toMatchAnsi(
+            '\x1b[41maa \x1b[32mbb\x1b[0m\n'
+            + 'ccc',
+        );
+    });
+
     test('handles compound sgr sequences with both opening and reset ESC[0m codes', () => {
         expect(wordWrap('aa \x1b[0;32mbb \x1b[0mccc', 6)).toMatchAnsi(
             'aa \x1b[32mbb\x1b[0m\n'
+            + 'ccc',
+        );
+    });
+
+    test('handles ESC[;#m implied resets in compound sgr codes', () => {
+        // when no code is given on an sgr escape, it is treated as a reset code
+        expect(wordWrap('\x1b[41maa \x1b[;32mbb \x1b[39mccc', 6)).toMatchAnsi(
+            '\x1b[41maa \x1b[0m\x1b[32mbb\x1b[39m\n'
             + 'ccc',
         );
     });

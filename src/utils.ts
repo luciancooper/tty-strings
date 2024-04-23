@@ -3,14 +3,15 @@ import { styleCodes, closingCodes } from './ansiCodes';
 export type AnsiEscape<T> = [string, true, string, T] | [string, false, number, T];
 
 export function parseEscape<T>(stack: AnsiEscape<T>[], seq: string, idx: T) {
-    const [, sgr, link] = /[\u001B\u009B](?:\[(\d+(?:;[\d;]+)?)m|\]8;;(.*)\u0007)/.exec(seq) ?? [],
+    const [, sgr, link] = /[\u001B\u009B](?:\[(\d*(?:;[\d;]+)?m)|\]8;;(.*)\u0007)/.exec(seq) ?? [],
         // array of indexes of stack items closed by this sequence
         closedIndex: number[] = [];
     // update ansi escape stack
     if (sgr) {
         // parse each sgr code
-        for (let re = /(?:[345]8;(?:2(?:;\d+){3}|5;\d+)|\d+)/g, m = re.exec(sgr); m; m = re.exec(sgr)) {
-            const [code] = m,
+        for (let re = /(?:[345]8;(?:2(?:;\d*){3}|5;\d*)|\d*)[;m]/g, m = re.exec(sgr); m; m = re.exec(sgr)) {
+            // no code is treated as a reset code
+            const code = m[0].slice(0, -1) || '0',
                 n = Number(/^[345]8;/.test(code) ? code.slice(0, 2) : code);
             if (closingCodes.includes(n)) {
                 // remove all escapes that this sequence closes from the stack

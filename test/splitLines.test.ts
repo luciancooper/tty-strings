@@ -37,6 +37,14 @@ describe('splitLines', () => {
         ]);
     });
 
+    test('supports ESC[m implied reset escapes', () => {
+        // when no code is given on an sgr escape, it is treated as a reset code
+        expect(splitLines('\x1b[41;32mAAAA\nBB\x1b[mBB')).toMatchAnsi([
+            '\x1b[41;32mAAAA\x1b[39;49m',
+            '\x1b[41;32mBB\x1b[0mBB',
+        ]);
+    });
+
     test('splits sgr escape sequences that overlap across a line break', () => {
         expect(splitLines('\x1b[41mAAAA\x1b[33m\n\x1b[49mBBBB\x1b[39m')).toMatchAnsi([
             '\x1b[41mAAAA\x1b[49m',
@@ -83,6 +91,13 @@ describe('splitLines', () => {
         expect(splitLines('AAA\x1b[0;33mBBB\nCCC\x1b[0mDDD')).toMatchAnsi([
             'AAA\x1b[33mBBB\x1b[39m',
             '\x1b[33mCCC\x1b[0mDDD',
+        ]);
+    });
+
+    test('supports ESC[;#m implied resets in compound sgr codes', () => {
+        expect(splitLines('\x1b[41;32mAAAA\nBB\x1b[;33mBB\x1b[39m')).toMatchAnsi([
+            '\x1b[41;32mAAAA\x1b[39;49m',
+            '\x1b[41;32mBB\x1b[0m\x1b[33mBB\x1b[39m',
         ]);
     });
 
