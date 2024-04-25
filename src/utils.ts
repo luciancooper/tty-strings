@@ -9,7 +9,7 @@ export function parseEscape<T>(stack: AnsiEscape<T>[], seq: string, idx: T) {
     // update ansi escape stack
     if (sgr) {
         // parse each sgr code
-        for (let re = /(?:[345]8;(?:2(?:;\d*){3}|5;\d*)|\d*)[;m]/g, m = re.exec(sgr); m; m = re.exec(sgr)) {
+        for (let re = /(?:[345]8;(?:2(?:;\d*){0,3}|5(?:;\d*)?|\d*)|\d*)[;m]/g, m = re.exec(sgr); m; m = re.exec(sgr)) {
             // no code is treated as a reset code
             const code = m[0].slice(0, -1) || '0',
                 n = Number(/^[345]8;/.test(code) ? code.slice(0, 2) : code);

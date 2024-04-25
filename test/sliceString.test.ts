@@ -152,6 +152,12 @@ describe('sliceChars', () => {
             .toMatchAnsi('\x1b[38;5;;48;5;176mfoo\x1b[49;39m');
     });
 
+    test('supports 8 bit color escape sequences with no arguments', () => {
+        // foreground 0
+        expect(sliceChars('\x1b[38;5mfoobar\x1b[39m', 0, 3))
+            .toMatchAnsi('\x1b[38;5mfoo\x1b[39m');
+    });
+
     test('supports 24 bit color escape sequences', () => {
         // foreground #6134eb & background #ccc0f0
         expect(sliceChars('\x1b[38;2;97;52;235m\x1b[48;2;204;192;240mfoobar\x1b[49m\x1b[39m', 0, 3))
@@ -162,6 +168,12 @@ describe('sliceChars', () => {
         // foreground #00ff00 & background #cc00dd
         expect(sliceChars('\x1b[38;2;;255;;48;2;204;;221mfoobar\x1b[49;39m', 0, 3))
             .toMatchAnsi('\x1b[38;2;;255;;48;2;204;;221mfoo\x1b[49;39m');
+    });
+
+    test('supports 24 bit color escape sequences with missing arguments', () => {
+        // foreground #ff0000
+        expect(sliceChars('\x1b[38;2;255mfoobar\x1b[39m', 0, 3))
+            .toMatchAnsi('\x1b[38;2;255mfoo\x1b[39m');
     });
 
     test('supports compound sgr sequences with both opening and closing codes', () => {
