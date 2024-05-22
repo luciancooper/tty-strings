@@ -1,12 +1,10 @@
-import { equals, iterableEquality } from '@jest/expect-utils';
-import { printDiffOrStringify, type MatcherHintOptions } from 'jest-matcher-utils';
 import { stripAnsi } from '../src';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
-            toMatchEachCodePoint: (expected?: number | boolean) => R
+            toMatchEachCodePoint: <E extends number | boolean>(expected?: E) => R
             toMatchEachSequence: (expected?: boolean) => R
             toMatchAnsi: (expected: string | string[]) => R
         }
@@ -27,16 +25,17 @@ function escAnsi<T extends string | string[]>(arg: T): T {
 }
 
 expect.extend({
-    toMatchAnsi(received: string | string[], expected: string | string[]) {
-        const options: MatcherHintOptions = this.isNot != null ? { isNot: this.isNot } : {};
-        let pass: boolean;
+    toMatchAnsi<E extends string | string[]>(this: jest.MatcherContext, received: E, expected: E) {
+        let pass: boolean,
+            comment: string;
         if (typeof expected === 'string') {
             pass = Object.is(received, expected);
-            options.comment = 'Object.is equality';
+            comment = 'Object.is equality';
         } else {
-            pass = equals(received, expected, [...this.customTesters, iterableEquality]);
-            options.comment = 'deep equality';
+            pass = this.equals(received, expected, [...this.customTesters, this.utils.iterableEquality]);
+            comment = 'deep equality';
         }
+        const options = { comment, ...(this.isNot != null && { isNot: this.isNot }) };
         return {
             pass,
             message: pass ? () => (
@@ -46,7 +45,7 @@ expect.extend({
             ) : () => (
                 this.utils.matcherHint('toMatchAnsi', undefined, undefined, options)
                 + '\n\n'
-                + printDiffOrStringify(
+                + this.utils.printDiffOrStringify(
                     escAnsi(expected),
                     escAnsi(received),
                     'Expected',
@@ -57,9 +56,10 @@ expect.extend({
         };
     },
 
-    toMatchEachCodePoint(
-        received: [number, number | boolean, (number | boolean)?][],
-        expected?: number | boolean,
+    toMatchEachCodePoint<E extends number | boolean>(
+        this: jest.MatcherContext,
+        received: [number, E, E?][],
+        expected?: E,
     ) {
         // if expected arg was not provided, it must be provided as the 3rd value in each fixture item
         const unmatched = received.filter(([, rec, exp = expected]) => rec !== exp);
