@@ -20,8 +20,8 @@ const { RI, ExtendedPictographic, Extend } = GBProps;
  */
 export default function stringWidth(string: string): number {
     if (typeof string !== 'string') return 0;
-    // strip all ansi control chars & normlize unicode
-    const str = stripAnsi(string).normalize('NFC');
+    // strip all ansi control chars
+    const str = stripAnsi(string);
     // check if input is an empty string after stripping ansi
     if (str.length === 0) return 0;
     // initialize total width count

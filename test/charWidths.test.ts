@@ -27,8 +27,8 @@ describe('charWidths', () => {
 
     test('handles hangul syllable characters', () => {
         expect([...charWidths('뎌쉐련')]).toStrictEqual([['뎌', 2], ['쉐', 2], ['련', 2]]);
-        // normalizes dynamically composed hangul syllables
-        expect([...charWidths('쩨뼕')]).toStrictEqual([['쩨', 2], ['뼕', 2]]);
+        // dynamically composed hangul syllables must be normalized first
+        expect([...charWidths('쩨뼕'.normalize('NFC'))]).toStrictEqual([['쩨', 2], ['뼕', 2]]);
     });
 
     test('handles emoji characters', () => {

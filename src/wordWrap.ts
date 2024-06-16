@@ -258,12 +258,8 @@ export default function wordWrap(string: string, columns: number, {
     const ansiStack: AnsiEscape<readonly [number, number]>[] = [];
     // ensure input is a string type
     return String(string)
-        // normlize unicode
-        .normalize('NFC')
-        // normalizes newlines
-        .replace(/\r\n/g, '\n')
         // split into lines
-        .split('\n')
+        .split(/\r?\n/g)
         // wrap each line
         .map((line) => wrapLine(ansiStack, line, columns, hard, trimLeft))
         // rejoin each wrapped line
