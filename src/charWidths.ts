@@ -2,7 +2,9 @@ import codePointWidth from './codePoint';
 import { graphemeBreakProperty, shouldBreak, GBProps } from './graphemeBreak';
 import { isEmojiZwjSequence, isEmojiModifierSequence } from './emoji';
 
-const { RI, ExtendedPictographic, Extend } = GBProps;
+const {
+    RI, ExtendedPictographic, Extend, V, T,
+} = GBProps;
 
 /**
  * A generator function that splits a string into measured graphemes. Does not handle ANSI escape codes,
@@ -71,10 +73,12 @@ export default function* charWidths(string: string): Generator<readonly [string,
             zwj = nextCp === 0x200D;
         } else {
             // check for a regional indicator sequence or an emoji modifier sequence
-            const emojiSeq = (prev === RI && next === RI)
+            let combining = (prev === RI && next === RI)
                 || (prev === ExtendedPictographic && (next & 0xF) === Extend && isEmojiModifierSequence(cp, nextCp));
-            // if not a emoji flag or modifier seq, increment width of the current grapheme cluster
-            if (!emojiSeq) cw += codePointWidth(nextCp);
+            // check for hangul jungseong (medial vowels) or jongseong (trailing consonants)
+            combining ||= (next === V || next === T);
+            // if not a combining point, increment width of the current grapheme cluster
+            if (!combining) cw += codePointWidth(nextCp);
             // add code point to code points array for the current grapheme cluster
             cpoints.push(nextCp);
             // add grapheme break property to props array

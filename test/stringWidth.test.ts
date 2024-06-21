@@ -13,6 +13,16 @@ describe('stringWidth', () => {
         expect(stringWidth('अनुच्छेद')).toBe(5);
     });
 
+    test('measures precomposed hangul syllables', () => {
+        // U+B38C U+C250 U+B828
+        expect(stringWidth('뎌쉐련')).toBe(6);
+    });
+
+    test('measures composed hangul syllables', () => {
+        // U+110D U+1166 U+1108 U+1167 U+11B4
+        expect(stringWidth('쩨뼕')).toBe(4);
+    });
+
     test('measures zero width characters', () => {
         expect(stringWidth('\x08\x7F')).toBe(0);
     });

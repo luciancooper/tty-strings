@@ -25,10 +25,14 @@ describe('charWidths', () => {
         expect([...charWidths('अनुच्छेद')]).toStrictEqual([['अ', 1], ['नु', 1], ['च्छे', 2], ['द', 1]]);
     });
 
-    test('handles hangul syllable characters', () => {
+    test('handles precomposed hangul syllables', () => {
+        // U+B38C U+C250 U+B828
         expect([...charWidths('뎌쉐련')]).toStrictEqual([['뎌', 2], ['쉐', 2], ['련', 2]]);
-        // dynamically composed hangul syllables must be normalized first
-        expect([...charWidths('쩨뼕'.normalize('NFC'))]).toStrictEqual([['쩨', 2], ['뼕', 2]]);
+    });
+
+    test('handles composed hangul syllables', () => {
+        // U+110D U+1166 U+1108 U+1167 U+11B4
+        expect([...charWidths('쩨뼕')]).toStrictEqual([['쩨', 2], ['뼕', 2]]);
     });
 
     test('handles emoji characters', () => {
