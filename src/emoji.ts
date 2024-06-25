@@ -391,3 +391,16 @@ export function isEmojiModifierSequence(cp1: number, cp2: number) {
     // a valid emoji modifier sequence must be an `Emoji_Modifier_Base` followed by an `Emoji_Modifier`
     return !!((props1 & 4) && (props2 & 8));
 }
+
+/**
+ * Check if a code point is a valid emoji modifier base
+ *
+ * @remarks
+ * Defined by UTS #51 ED-12: {@link https://unicode.org/reports/tr51/#def_emoji_modifier_base}
+ *
+ * @param cp - code point to check
+ * @returns Whether the code point is an emodi modifier base
+ */
+export function isEmojiModifierBase(cp: number) {
+    return !!(emojiProps(cp) & 4);
+}

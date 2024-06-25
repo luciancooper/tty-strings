@@ -35,9 +35,11 @@ export const GBProps = {
     ExtendedPictographic,
 } as const;
 
-const InCB_Extend = 0b0010000,
-    InCB_Linker = 0b0100000,
-    InCB_Consonant = 0b1000000;
+const InCB_Extend = 0b00010000,
+    InCB_Linker = 0b00100000,
+    InCB_Consonant = 0b01000000;
+
+export const Emoji_Modifier = 0b10000000;
 
 /**
  * Indic conjunct break properties
@@ -53,7 +55,7 @@ export const InCBProps = {
  *
  * @remarks
  * Properties are derived from {@link https://unicode.org/Public/15.1.0/ucd/auxiliary/GraphemeBreakProperty.txt}
- * Extended_Pictographic values are derived from {@link https://unicode.org/Public/15.1.0/ucd/emoji/emoji-data.txt}
+ * Extended_Pictographic and Emoji_Modifier values are derived from {@link https://unicode.org/Public/15.1.0/ucd/emoji/emoji-data.txt}
  * InCB properties are derived from {@link https://www.unicode.org/Public/15.1.0/ucd/DerivedCoreProperties.txt}
  *
  * @param code - unicode code point
@@ -1000,7 +1002,7 @@ export function graphemeBreakProperty(code: number) {
             )) ? ExtendedPictographic : None
         ) : code < 0x1F53E ? (
             // Miscellaneous Symbols and Pictographs
-            (code >= 0x1F3FB && code <= 0x1F3FF) ? Extend : ExtendedPictographic // [5/752]
+            (code >= 0x1F3FB && code <= 0x1F3FF) ? Extend | Emoji_Modifier : ExtendedPictographic // [5/752]
         ) : (code <= 0x1F7FF ? (code >= 0x1F546 && (
             // Miscellaneous Symbols and Pictographs + Emoticons
             code <= 0x1F64F // [266]
@@ -1033,6 +1035,97 @@ export function graphemeBreakProperty(code: number) {
         ) ? Control : Extend; // [96/240]
     }
     return None;
+}
+
+/**
+ * An approximation of whether a code point has the derived property `Grapheme_Base`.
+ * The point is to be a quicker check than exaustively checking all code point ranges with the property,
+ * since this check does not have to be super accurate.
+ * The `Grapheme_Base` prop is derived from `[0..10FFFF] - Cc - Cf - Cs - Co - Cn - Zl - Zp - Grapheme_Extend`
+ *
+ * @remarks
+ * This implementation will not produce any false negatives (a response of `false` when the code point actually does
+ * have the `Grapheme_Base` property), but it will produce false positives. All code points that produce
+ * false positives will have a `General_Category` value of `Cn`, `Cs`, or `Co`.
+ *
+ * @param cp - code point to check
+ * @param gbp - the grapheme break property of the code point
+ * @returns `true` if the code point has the property `Grapheme_Base`, or `false` otherwise.
+ */
+export function isGraphemeBase(cp: number, gbp: number) {
+    if ((gbp & 0xF) === Extend) {
+        // code point has grapheme break property `Extend`
+        return !!(gbp & Emoji_Modifier);
+    }
+    // otherwise, check for Cf, Zl, Zp
+    // Basic Latin ... Hebrew (0000 - 05FF)
+    if (cp < 0x0600) {
+        return !(cp <= 0x009F
+            ? (cp <= 0x001F || cp >= 0x007F) // Cc [65]
+            : (cp === 0x00AD)); // Cf [1]
+    }
+    // Arabic ... Arabic Extended-A (0600 - 08FF)
+    if (cp < 0x0900) {
+        return !(cp < 0x0750 ? (
+            // Arabic
+            cp <= 0x0605 // Cf [6]
+            || cp === 0x061C // Cf [1]
+            || cp === 0x06DD // Cf [1]
+            // Syriac
+            || cp === 0x070F // Cf [1]
+        ) : cp >= 0x0890 && (
+            // Arabic Extended-B
+            cp <= 0x0891 // Cf [2]
+            // Arabic Extended-A
+            || cp === 0x08E2 // Cf [1]
+        ));
+    }
+    // Devanagari ... General Punctuation (0900 - 206F)
+    if (cp < 0x2070) {
+        return !(cp < 0x200B ? (
+            // Mongolian
+            cp === 0x180E // Cf [1]
+        ) : (
+            // General Punctuation
+            cp <= 0x200F
+            || (cp >= 0x2028 && cp <= 0x202E) // Zl [1] & Zp [1] & Cf [5]
+            || cp >= 0x2060 // Cf [15] & Cn [1]
+        ));
+    }
+    // Superscripts and Subscripts ... Specials (2070 - FFFB)
+    if (cp <= 0xFFFB) {
+        return !(
+            // Arabic Presentation Forms-B
+            cp === 0xFEFF // Cf [1]
+            // Specials
+            || cp >= 0xFFEF // Cn [10] + Cf [3]
+        );
+    }
+    // Linear B Syllabary ... Musical Symbols (FFFC - 1D17A)
+    if (cp <= 0x1D17A) {
+        return !(cp < 0x13430 ? (
+            // Kaithi
+            cp === 0x110BD // Cf [1]
+            || cp === 0x110CD // Cf [1]
+        ) : cp < 0x1BCA0 ? (
+            // Egyptian Hieroglyph Format Controls
+            cp <= 0x1343F // Cf [16]
+        ) : (
+            // Shorthand Format Controls
+            cp <= 0x1BCA3 // Cf [4]
+            // Musical Symbols
+            || cp >= 0x1D173 // Cf [8]
+        ));
+    }
+    // Ancient Greek Musical Notation ... Supplementary Private Use Area-B (1D17B - 10FFFF)
+    return !(cp >= 0x323B0 && cp <= 0xEFFFF && (
+        // CJK Unified Ideographs Extension H
+        cp <= 0xE001F // Cn [711,791] & Cf [1]
+        // Variation Selectors Supplement
+        || cp >= 0xE01F0 // Cn [65,040]
+        // Tags
+        || (cp >= 0xE0080 && cp <= 0xE00FF) // Cn [128]
+    ));
 }
 
 /**

@@ -90,7 +90,7 @@ export function fetchUnicodeFile(path: string, props: boolean, cols?: number) {
  * @param merge - optional function to merge the values of two overlapping ranges
  * @returns processed code point ranges
  */
-export function processRanges<T extends number>(
+export function processRanges<T>(
     ranges: [number, number, T][],
     merge: (a: T, b: T) => T | null = () => null,
 ) {
@@ -126,8 +126,8 @@ export function processRanges<T extends number>(
             if (v === null) {
                 throw new Error(
                     'Invalid overlap between the following code point ranges overlap:\n\n'
-                    + `  ${r1[0].toString(16)} - ${r1[1].toString(16)} (${r1[2]})\n`
-                    + `  ${r2[0].toString(16)} - ${r2[1].toString(16)} (${r2[2]})`,
+                    + `  ${r1[0].toString(16)} - ${r1[1].toString(16)} (${String(r1[2])})\n`
+                    + `  ${r2[0].toString(16)} - ${r2[1].toString(16)} (${String(r2[2])})`,
                 );
             }
             r1[2] = v;
@@ -151,6 +151,29 @@ export function processRanges<T extends number>(
         } else i += 1;
     }
     return ranges;
+}
+
+/**
+ * Validates that a sequence of code point ranges does not overlap and has no gaps
+ */
+export function validateSequentialRanges<T>(ranges: [number, number, T][]) {
+    // validate range overlap
+    for (let i = 0; i < ranges.length - 1; i += 1) {
+        const [r1, r2] = [ranges[i]!, ranges[i + 1]!];
+        if (r2[0] <= r1[1]) {
+            throw new Error(
+                'The following code point ranges overlap:\n'
+                + ` [${r1[0].toString(16)} ${r1[1].toString(16)}] (${String(r1[2])})`
+                + ` & [${r2[0].toString(16)} ${r2[1].toString(16)}] (${String(r2[2])})`,
+            );
+        }
+        if (r2[0] - r1[1] > 1) {
+            throw new Error(
+                'Code point range gap:\n'
+                + ` [${(r1[1] + 1).toString(16)} ${(r2[0] - 1).toString(16)}] (${r2[0] - r1[1] - 1})`,
+            );
+        }
+    }
 }
 
 /**

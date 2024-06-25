@@ -1,67 +1,128 @@
-import { graphemeBreakProperty, shouldBreak, GBProps, InCBProps } from '../src/graphemeBreak';
-import { fetchUnicodeFile, processRanges, selectFixtures } from './unicodeHelpers';
+import { graphemeBreakProperty, isGraphemeBase, shouldBreak, GBProps, InCBProps, Emoji_Modifier } from '../src/graphemeBreak';
+import { fetchUnicodeFile, processRanges, selectFixtures, validateSequentialRanges } from './unicodeHelpers';
 
-type Base_GBP = typeof GBProps[keyof typeof GBProps];
-
-describe('grapheme break base properties', () => {
-    let fixtures: [number, Base_GBP][];
+describe('graphemeBreakProperty', () => {
+    let fixtures: [number, number][];
 
     beforeAll(async () => {
-        // fetch GraphemeBreakProperty.txt & emoji-data.txt unicode files
-        let ranges: [number, number, Base_GBP][];
+        let ranges: [number, number, number][];
         try {
-            ranges = [
-                // get grapheme break property data
+            ranges = processRanges<number>([
+                // fetch GraphemeBreakProperty.txt unicode file data
                 ...(await fetchUnicodeFile('UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt', true))
-                    .map<[number, number, string]>(([x, y, p]) => [x, y, p === 'Regional_Indicator' ? 'RI' : p!]),
-                // get emoji property data
+                    .map<[number, number, number]>(([x, y, p]) => (
+                    [x, y, GBProps[(p === 'Regional_Indicator' ? 'RI' : p!) as keyof typeof GBProps]]
+                )),
+                // fetch emoji-data.txt unicode file data
                 ...(await fetchUnicodeFile('UCD/latest/ucd/emoji/emoji-data.txt', true))
-                    // keep only Extended_Pictographic values
-                    .filter(([,, prop]) => prop === 'Extended_Pictographic')
-                    .map<[number, number, string]>(([x, y]) => [x, y, 'ExtendedPictographic']),
-            ].map<[number, number, Base_GBP]>(([x, y, k]) => [x, y, GBProps[k as keyof typeof GBProps]]);
+                    // keep only Extended_Pictographic & Emoji_Modifier properties
+                    .filter(([,, prop]) => prop === 'Extended_Pictographic' || prop === 'Emoji_Modifier')
+                    .map<[number, number, number]>(([x, y, p]) => (
+                    [x, y, p === 'Extended_Pictographic' ? GBProps.ExtendedPictographic : Emoji_Modifier]
+                )),
+                // fetch DerivedCoreProperties.txt unicode file data
+                ...(await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
+                    .filter(([,, prop]) => prop === 'InCB')
+                    // convert each incb property to its equivalent integer value
+                    .map<[number, number, number]>(([x, y,, k]) => [x, y, InCBProps[k as keyof typeof InCBProps]]),
+            ], (a, b) => a | b);
         } catch (e) {
-            throw new Error(`Failed to fetch grapheme break property data:\n\n${(e as { message: string }).message}`);
+            throw new Error(`Failed to fetch unicode data:\n\n${(e as { message: string }).message}`);
         }
-        // process the ranges
-        ranges = processRanges(ranges);
         // select fixture code points
         fixtures = selectFixtures(ranges, 0);
     });
 
-    test.each(Object.entries(GBProps))('base prop %s', (cls, value: Base_GBP) => {
-        expect(
-            fixtures.filter(([, v]) => v === value).map(([cp]) => [cp, graphemeBreakProperty(cp) & 0xF]),
-        ).toMatchEachCodePoint(value);
+    test.each(Object.entries(GBProps))('base prop %s', (cls, value) => {
+        const matching = fixtures.filter(([, v]) => (v & 0xF) === value);
+        expect(matching.map(([cp]) => [cp, graphemeBreakProperty(cp) & 0xF])).toMatchEachCodePoint(value);
+    });
+
+    test.each(Object.entries(InCBProps))('incb prop InCB_%s', (cls, value) => {
+        const matching = fixtures.filter(([, v]) => (v & 0xF0) === value);
+        expect(matching.map(([cp]) => [cp, graphemeBreakProperty(cp) & 0xF0])).toMatchEachCodePoint(value);
+    });
+
+    test('additional prop Emoji_Modifier', () => {
+        const matching = fixtures.filter(([, v]) => (v & 0xF0) === Emoji_Modifier);
+        expect(matching.map(([cp]) => [cp, graphemeBreakProperty(cp) & 0xF0])).toMatchEachCodePoint(Emoji_Modifier);
     });
 });
 
-type InCB_GBP = typeof InCBProps[keyof typeof InCBProps];
-
-describe('indic conjunct props', () => {
-    let fixtures: [number, InCB_GBP | 0][];
+describe('isGraphemeBase', () => {
+    let tests: [number, string, boolean, boolean][];
 
     beforeAll(async () => {
-        // fetch DerivedCoreProperties.txt unicode file
-        let ranges: [number, number, InCB_GBP][];
+        // fetch DerivedGeneralCategory.txt unicode file
+        let GeneralCategory: [number, number, string][];
         try {
-            ranges = (await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
-                .filter(([,, prop]) => prop === 'InCB')
-                // convert each incb property to its equivalent integer value
-                .map<[number, number, InCB_GBP]>(([x, y,, k]) => [x, y, InCBProps[k as keyof typeof InCBProps]]);
+            GeneralCategory = (await fetchUnicodeFile('UCD/latest/ucd/extracted/DerivedGeneralCategory.txt', true))
+                .sort(([a], [b]) => a - b) as [number, number, string][];
+        } catch (e) {
+            throw new Error(`Failed to fetch general category data:\n\n${(e as { message: string }).message}`);
+        }
+        // validate general category data
+        validateSequentialRanges(GeneralCategory);
+        // fetchDerivedCoreProperties.txt unicode file
+        let GraphemeBaseData: [number, number, string][];
+        try {
+            GraphemeBaseData = (await fetchUnicodeFile('UCD/latest/ucd/DerivedCoreProperties.txt', true))
+                .filter(([,, prop]) => prop === 'Grapheme_Base')
+                .sort(([a], [b]) => a - b) as [number, number, string][];
         } catch (e) {
             throw new Error(`Failed to fetch derived core properties data:\n\n${(e as { message: string }).message}`);
         }
-        // process the ranges
-        ranges = processRanges(ranges);
-        // select fixture code points
-        fixtures = selectFixtures(ranges, 0);
+        // process Grapheme_Base data ranges
+        let last = 0;
+        const GraphemeBase: [number, number, boolean][] = [];
+        for (const [r1, r2] of GraphemeBaseData) {
+            if (r1 > last) GraphemeBase.push([last, r1 - 1, false]);
+            GraphemeBase.push([r1, r2, true]);
+            last = r2 + 1;
+        }
+        const max = GeneralCategory[GeneralCategory.length - 1]![1];
+        if (max >= last) GraphemeBase.push([last, max, false]);
+        // merge ranges together
+        const ranges = processRanges<{ GC: string | null, GB: boolean | null }>([
+            ...GeneralCategory.map<[number, number, { GC: string | null, GB: boolean | null }]>(
+                ([a, b, GC]) => [a, b, { GC, GB: null }],
+            ),
+            ...GraphemeBase.map<[number, number, { GC: string | null, GB: boolean | null }]>(
+                ([a, b, GB]) => [a, b, { GC: null, GB }],
+            ),
+        ], (a, b) => ({ GC: a.GC ?? b.GC, GB: a.GB ?? b.GB }));
+        // validate that there is no range overlap or gaps between ranges
+        validateSequentialRanges(ranges);
+        // select fixtures
+        tests = [];
+        for (const [cp1, cp2, { GC, GB }] of ranges) {
+            // validate general category and grapheme base value
+            if (GC === null || GB === null) {
+                throw new Error(
+                    'Invalid Grapheme_Base fixture range:\n'
+                    + `[${cp1.toString(16)} ${cp1.toString(16)}] GeneralCateogry: ${GC} GraphemeBase: ${GB}`,
+                );
+            }
+            tests.push([cp1, GC, GB, isGraphemeBase(cp1, graphemeBreakProperty(cp1))]);
+            // add median code point in the range
+            if (cp2 - cp1 > 1) {
+                const mid = Math.floor((cp1 + cp2) / 2);
+                tests.push([mid, GC, GB, isGraphemeBase(mid, graphemeBreakProperty(mid))]);
+            }
+            // add highest code point in the range
+            if (cp2 - cp1 > 0) tests.push([cp2, GC, GB, isGraphemeBase(cp1, graphemeBreakProperty(cp1))]);
+        }
     });
 
-    test.each(Object.entries(InCBProps))('incb prop %s', (cls, value: InCB_GBP) => {
-        expect(
-            fixtures.filter(([, v]) => v === value).map(([cp]) => [cp, graphemeBreakProperty(cp) & 0xF0]),
-        ).toMatchEachCodePoint(value);
+    test('does not produce false negatives', () => {
+        expect(tests.filter(([,, expected, recieved]) => (expected && !recieved))).toHaveLength(0);
+    });
+
+    test('all false positives are general category Cn, Co, or Cs', () => {
+        const falsePositives = tests
+            .filter(([,, expected, recieved]) => (!expected && recieved))
+            .filter(([, gc]) => !['Cn', 'Co', 'Cs'].includes(gc));
+        expect(falsePositives).toHaveLength(0);
     });
 });
 

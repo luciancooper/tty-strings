@@ -21,7 +21,7 @@ describe('splitChars', () => {
         expect([...splitChars('Ĺo͂řȩm̅')]).toStrictEqual(['Ĺ', 'o͂', 'ř', 'ȩ', 'm̅']);
     });
 
-    test('splits hindi strings with combining marks', () => {
+    test('splits devanagari linking consonants', () => {
         expect([...splitChars('अनुच्छेद')]).toStrictEqual(['अ', 'नु', 'च्छे', 'द']);
     });
 

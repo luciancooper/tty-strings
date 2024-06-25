@@ -30,7 +30,7 @@ describe('stringLength', () => {
         expect(stringLength('Ĺo͂řȩm̅')).toBe(5);
     });
 
-    test('counts hindi letters with combining marks', () => {
+    test('counts devanagari linking consonants', () => {
         expect(stringLength('अनुच्छेद')).toBe(4);
     });
 

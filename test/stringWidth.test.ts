@@ -1,29 +1,49 @@
 import { stringWidth } from '../src';
 
 describe('stringWidth', () => {
-    test('measures basic strings', () => {
+    test('basic strings', () => {
         expect(stringWidth('foo')).toBe(3);
     });
 
-    test('measures full width characters', () => {
+    test('full width characters', () => {
         expect(stringWidth('⌚⭐⺎⽋豈Ａ🚀')).toBe(14);
     });
 
-    test('measures indic linking consonants', () => {
+    test('devanagari linking consonants', () => {
         expect(stringWidth('अनुच्छेद')).toBe(5);
     });
 
-    test('measures precomposed hangul syllables', () => {
+    test('precomposed hangul syllables', () => {
         // U+B38C U+C250 U+B828
         expect(stringWidth('뎌쉐련')).toBe(6);
     });
 
-    test('measures composed hangul syllables', () => {
+    test('decomposed hangul syllables', () => {
         // U+110D U+1166 U+1108 U+1167 U+11B4
         expect(stringWidth('쩨뼕')).toBe(4);
     });
 
-    test('measures zero width characters', () => {
+    test('precomposed musical notes', () => {
+        // U+1D15E U+1D162 U+1D1BC U+1D1BF
+        expect(stringWidth('𝅗𝅥𝅘𝅥𝅰𝆺𝅥𝆹𝅥𝅯')).toBe(4);
+    });
+
+    test('decomposed musical notes', () => {
+        // U+1D157 U+1D165 / U+1D158 U+1D165 U+1D170 / U+1D1BA U+1D165 / U+1D1B9 U+1D165 U+1D16F
+        expect(stringWidth('𝅗𝅥𝅘𝅥𝅰𝆺𝅥𝆹𝅥𝅯')).toBe(4);
+    });
+
+    test('precomposed oriya vowels', () => {
+        // U+0B4C
+        expect(stringWidth('ୌ')).toBe(1);
+    });
+
+    test('decomposed oriya vowels', () => {
+        // U+0B47 U+0B57
+        expect(stringWidth('ୌ')).toBe(1);
+    });
+
+    test('zero width characters', () => {
         expect(stringWidth('\x08\x7F')).toBe(0);
     });
 
@@ -48,7 +68,7 @@ describe('stringWidth', () => {
         expect(stringWidth('\x1b[31m\x1b[39m')).toBe(0);
     });
 
-    describe('measures emoji', () => {
+    describe('emoji', () => {
         test('presentation sequences', () => {
             expect(stringWidth('☠️')).toBe(1);
         });
