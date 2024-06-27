@@ -14,7 +14,7 @@ The goal of this project is to alleviate the headache of working with Javascript
 **Features**
 
 * Implements the Unicode grapheme cluster breaking algorithm outlined in [UAX #29](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries) to split strings into user perceived characters (graphemes).
-* Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). More details about the visual width of code points can be found in the [`codePointWidth`](#codepointwidthcode) function description below.
+* Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). For more details see the descriptions of the [`codePointWidth`](#codepointwidthcode), [`stringWidth`](#stringwidthstring), and [`charWidths`](#charwidthsstring) functions below.
 * Provides methods for slicing and wrapping strings that contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
 
 Everything in this module is up to date with the latest version of Unicode (currently version [15.1.0](https://www.unicode.org/versions/Unicode15.1.0/)).
@@ -41,7 +41,7 @@ Then import one or more of the functions detailed in the section below.
 
 ### `codePointWidth(code)`
 
-Get the visual width of a unicode code point.
+Get the visual width of a unicode code point, this project's equivalent of [`wcwidth`](https://www.man7.org/linux/man-pages/man3/wcwidth.3.html). Using this function alone to accurately measure the visual width of strings is insufficient, instead use the [`stringWidth`](#stringwidthstring) or [`charWidths`](#charwidthsstring) functions as they take into account the context of each code point.
 
 * `code` - Unicode code point (must be a `number`).
 
@@ -86,7 +86,7 @@ stringLength('🏳️‍🌈');
 
 ### `stringWidth(string)`
 
-Get the visual width of a string. ANSI escape codes will be ignored.
+Measure the visual width of a string. ANSI escape codes will be ignored. This function endeavors to be more accurate than an implementation of [`wcswidth`](https://man7.org/linux/man-pages/man3/wcswidth.3.html), as it takes into account the context of each code point within a grapheme cluster.
 
 * `string` - Input string to measure.
 
@@ -271,7 +271,7 @@ const { splitChars } = require('tty-strings');
 
 ### `charWidths*(string)`
 
-A generator function that splits a string into measured graphemes. Does not handle ANSI escape codes, so make sure to use [`stripAnsi`](#stripansistring) on any input string before calling this generator.
+A generator function that splits a string into measured graphemes. Does not handle ANSI escape codes, so make sure to use [`stripAnsi`](#stripansistring) on any input string before calling this generator. This function endeavors to be more accurate than an implementation of [`wcswidth`](https://man7.org/linux/man-pages/man3/wcswidth.3.html), as it takes into account the context of each code point within a grapheme cluster.
 
  * `string` - Input string to split.
 
