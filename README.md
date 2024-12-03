@@ -17,7 +17,7 @@ The goal of this project is to alleviate the headache of working with Javascript
 * Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). For more details see the descriptions of the [`codePointWidth`](#codepointwidthcode), [`stringWidth`](#stringwidthstring), and [`charWidths`](#charwidthsstring) functions below.
 * Provides methods for slicing and wrapping strings that contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
 
-Everything in this module is up to date with the latest version of Unicode (currently version [15.1.0](https://www.unicode.org/versions/Unicode15.1.0/)).
+Everything in this module is up to date with the latest version of Unicode (currently version [16.0.0](https://www.unicode.org/versions/Unicode16.0.0/)).
 
 Check out the [acknowledgements](#acknowledgements) section below for a look at the other Javascript projects that inspired this module.
 
@@ -49,9 +49,9 @@ Returns `number` - `2` for a full width code point, `0` for a zero width code po
 
 **Code points**
 
-*Full width* code points are all unicode code points whose `East_Asian_Width` property value is `F` or `W`, which are derived from the [EastAsianWidth.txt](https://unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt) data file associated with [UAX #11: East Asian Width](https://unicode.org/reports/tr11/).
+*Full width* code points are all unicode code points whose `East_Asian_Width` property value is `F` or `W`, which are derived from the [EastAsianWidth.txt](https://unicode.org/Public/16.0.0/ucd/EastAsianWidth.txt) data file associated with [UAX #11: East Asian Width](https://unicode.org/reports/tr11/).
 
-*Zero width* code points include all unicode code points whose `General_Category` property value is `Mn`, `Me`, or `Cc` (derived from the [DerivedGeneralCategory.txt](https://unicode.org/Public/UCD/latest/ucd/extracted/DerivedGeneralCategory.txt) data file), as well as all code points with the `Default_Ignorable_Code_Point` property, (derived from the [DerivedCoreProperties.txt](https://unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt) data file). Check out [UAX #44: Unicode Character Database](https://unicode.org/reports/tr44/) for more information about these properties.
+*Zero width* code points include all unicode code points whose `General_Category` property value is `Mn`, `Me`, or `Cc` (derived from the [DerivedGeneralCategory.txt](https://unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt) data file), as well as all code points with the `Default_Ignorable_Code_Point` property, (derived from the [DerivedCoreProperties.txt](https://unicode.org/Public/16.0.0/ucd/DerivedCoreProperties.txt) data file). Check out [UAX #44: Unicode Character Database](https://unicode.org/reports/tr44/) for more information about these properties.
 
 **Example**
 

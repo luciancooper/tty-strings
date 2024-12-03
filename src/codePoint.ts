@@ -2,11 +2,12 @@
  * Get the visual width of a Unicode code point.
  *
  * @remarks
- * Full width code points are derived from {@link https://unicode.org/Public/15.1.0/ucd/EastAsianWidth.txt}
- * Zero width code points include those with general category values of Mn, Me, and Cc,
- * which are derived from {@link https://unicode.org/Public/15.1.0/ucd/extracted/DerivedGeneralCategory.txt}
- * As well as all code points with the `Default_Ignorable_Code_Point` property,
- * which are derived from {@link https://unicode.org/Public/15.1.0/ucd/DerivedCoreProperties.txt}
+ * Full width code points are include those with an `East_Asian_Width` property of `F` or `W`,
+ * which are derived from {@link https://unicode.org/Public/16.0.0/ucd/EastAsianWidth.txt}.
+ * Zero width code points include those with general category values of `Mn`, `Me`, and `Cc`,
+ * which are derived from {@link https://unicode.org/Public/16.0.0/ucd/extracted/DerivedGeneralCategory.txt},
+ * as well as all code points with the `Default_Ignorable_Code_Point` property,
+ * which are derived from {@link https://unicode.org/Public/16.0.0/ucd/DerivedCoreProperties.txt}.
  *
  * @example
  * ```ts
@@ -69,7 +70,7 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
             // Mandaic
             (code >= 0x0859 && code <= 0x085B) // Mn [3]
             // Arabic Extended-B
-            || (code >= 0x0898 && code <= 0x089F) // Mn [8]
+            || (code >= 0x0897 && code <= 0x089F) // Mn [9]
             // Arabic Extended-A
             || (code >= 0x08CA && code !== 0x08E2) // Mn [56]
         ) : code < 0x0964 ? (
@@ -298,8 +299,10 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
             // Miscellaneous Symbols
             (code <= 0x26C5 ? (
                 code <= 0x2615 // W [2]
+                || (code >= 0x2630 && code <= 0x2637) // W [8]
                 || (code >= 0x2648 && code <= 0x2653) // W [12]
                 || code === 0x267F // W [1]
+                || (code >= 0x268A && code <= 0x268F) // W [6]
                 || code === 0x2693 // W [1]
                 || code === 0x26A1 // W [1]
                 || (code >= 0x26AA && code <= 0x26AB) // W [2]
@@ -360,21 +363,19 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
                 : ((code >= 0x3041 && code <= 0x3096) || code >= 0x309B) ? 2 // W [187]
                     : (code >= 0x3099) ? 0 : 1 // Mn [2]
         ) : code < 0xA66F ? (
-            code <= 0x31E3 ? (
+            code <= 0x31E5 ? (
                 // Bopomofo ... CJK Strokes
                 code === 0x3164 ? 0 // Lo [1]
-                    : (code >= 0x3105 && code !== 0x3130 && code !== 0x318F) ? 2 : 1 // W [220]
-            ) : (code < 0x4DC0 ? (code >= 0x31EF && (
+                    : (code >= 0x3105 && code !== 0x3130 && code !== 0x318F) ? 2 : 1 // W [222]
+            ) : (code < 0x3250 ? (
                 // Katakana Phonetic Extensions & Enclosed CJK Letters and Months
-                (code <= 0x3247 && code !== 0x321F) // W [88]
-                // CJK Compatibility & CJK Unified Ideographs Extension A
-                || code >= 0x3250 // W [7,024]
-            )) : (code >= 0x4E00 && (
-                // CJK Unified Ideographs & Yi Syllables
-                code <= 0xA48C // W [22,157]
+                code >= 0x31EF && code <= 0x3247 && code !== 0x321F // W [88]
+            ) : (
+                // CJK Compatibility ... Yi Syllables
+                code <= 0xA48C // W [29,245]
                 // Yi Radicals
                 || (code <= 0xA4C6 && code >= 0xA490) // W [55]
-            ))) ? 2 : 1
+            )) ? 2 : 1
         ) : code < 0xA8C4 ? (
             (code < 0xA800 ? (
                 // Cyrillic Extended-B
@@ -491,10 +492,12 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
             // Hanifi Rohingya
             || code >= 0x10D24 // Mn [4]
         ) : code < 0x10F51 ? (
+            // Garay
+            (code >= 0x10D69 && code <= 0x10D6D) // Mn [5]
             // Yezidi
-            (code >= 0x10EAB && code <= 0x10EAC) // Mn [2]
+            || (code >= 0x10EAB && code <= 0x10EAC) // Mn [2]
             // Arabic Extended-C
-            || (code >= 0x10EFD && code <= 0x10EFF) // Mn [3]
+            || (code >= 0x10EFC && code <= 0x10EFF) // Mn [4]
             // Sogdian
             || code >= 0x10F46 // Mn [11]
         ) : code < 0x1107F ? (
@@ -537,13 +540,22 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
     }
     // Grantha ... Mro (11300 - 16A6F)
     if (code < 0x16AD0) {
-        return (code < 0x11375 ? (
-            // Grantha
-            code <= 0x11301 // Mn [2]
-            || (code >= 0x1133B && code <= 0x1133C) // Mn [2]
-            || code === 0x11340 // Mn [1]
-            || (code >= 0x11366 && code <= 0x1136C) // Mn [7]
-            || code >= 0x11370 // Mn [5]
+        return (code <= 0x113E2 ? (
+            code < 0x11375 ? (
+                // Grantha
+                code <= 0x11301 // Mn [2]
+                || (code >= 0x1133B && code <= 0x1133C) // Mn [2]
+                || code === 0x11340 // Mn [1]
+                || (code >= 0x11366 && code <= 0x1136C) // Mn [7]
+                || code >= 0x11370 // Mn [5]
+            ) : (code >= 0x113BB && (
+                // Tulu-Tigalari
+                code <= 0x113C0 // Mn [6]
+                || code === 0x113CE // Mn [1]
+                || code === 0x113D0 // Mn [1]
+                || code === 0x113D2 // Mn [1]
+                || code >= 0x113E1 // Mn [2]
+            ))
         ) : code < 0x114C4 ? (
             code <= 0x1145E ? (code >= 0x11438 && (
                 // Newa
@@ -573,7 +585,7 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
                 || (code >= 0x116B0 && code !== 0x116B6) // Mn [7]
             )) : (code >= 0x1171D && (
                 // Ahom
-                code <= 0x1171F // Mn [3]
+                (code <= 0x1171F && code !== 0x1171E) // Mn [2]
                 || (code >= 0x11722 && code !== 0x11726) // Mn [9]
             ))
         ) : code < 0x119D4 ? (
@@ -616,24 +628,29 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
             (code >= 0x11D31 && code <= 0x11D36) // Mn [6]
             || (code >= 0x11D3A && code <= 0x11D3D && code !== 0x11D3B) // Mn [3]
             || (code >= 0x11D3F && code !== 0x11D46) // Mn [8]
-        ) : code < 0x11F00 ? ((code <= 0x11EF4 && code >= 0x11D90 && (
+        ) : code < 0x11F00 ? (code <= 0x11EF4 && code >= 0x11D90 && (
             // Gunjala Gondi
             code <= 0x11D91 // Mn [2]
             || code === 0x11D95 // Mn [1]
             || code === 0x11D97 // Mn [1]
             // Makasar
             || code >= 0x11EF3 // Mn [2]
-        ))) : (code <= 0x11F42 ? (
+        )) : code <= 0x11F5A ? (
             // Kawi
             code <= 0x11F01 // Mn [2]
             || (code >= 0x11F36 && code <= 0x11F3A) //  Mn [5]
             || code === 0x11F40 // Mn [1]
             || code === 0x11F42 // Mn [1]
-        ) : (
+            || code === 0x11F5A // Mn [1]
+        ) : code <= 0x13455 ? (
             // Egyptian Hieroglyph Format Controls
             code === 0x13440 // Mn [1]
-            || (code >= 0x13447 && code <= 0x13455) // Mn [15]
-        ))) ? 0 : 1;
+            || code >= 0x13447 // Mn [15]
+        ) : (
+            // Gurung Khema
+            (code >= 0x1611E && code <= 0x16129) // Mn [12]
+            || (code >= 0x1612D && code <= 0x1612F) // Mn [3]
+        )) ? 0 : 1;
     }
     // Bassa Vah ... Arabic Mathematical Alphabetic Symbols (16AD0 - 1EEFF)
     if (code < 0x1F000) {
@@ -658,7 +675,7 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
                 // Tangut Components, Khitan Small Script
                 || (code >= 0x18800 && code <= 0x18CD5) // W [1,238]
                 // Tangut Supplement
-                || (code >= 0x18D00) // W [9]
+                || (code >= 0x18CFF) // W [10]
             ) : code <= 0x1B122 ? (
                 // Kana Extended-B, Kana Supplement, Kana Extended-A
                 code >= 0x1AFF0 && code !== 0x1AFF4 && code !== 0x1AFFC && code !== 0x1AFFF // W [304]
@@ -671,29 +688,36 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
                 // Nushu
                 || code >= 0x1B170 // W [396]
             )) ? 2 : 1
-        ) : (code < 0x1D167 ? (
-            // Duployan, Shorthand Format Controls
-            (code >= 0x1BC9D && code <= 0x1BCA3 && code !== 0x1BC9F) // Mn [2] & Cf [4]
-            // Znamenny Musical Notation
-            || (code >= 0x1CF00 && code <= 0x1CF2D) // Mn [46]
-            || (code >= 0x1CF30 && code <= 0x1CF46) // Mn [23]
         ) : code < 0x1D245 ? (
-            // Musical Symbols
-            code <= 0x1D169 // Mn [3]
-            || (code >= 0x1D173 && code <= 0x1D182) // Cf [8] & Mn [8]
-            || (code >= 0x1D185 && code <= 0x1D18B) // Mn [7]
-            || (code >= 0x1D1AA && code <= 0x1D1AD) // Mn [4]
-            // Ancient Greek Musical Notation
-            || code >= 0x1D242 // Mn [3]
-        ) : code < 0x1E000 ? (
+            (code < 0x1D167 ? (
+                // Duployan, Shorthand Format Controls
+                (code >= 0x1BC9D && code <= 0x1BCA3 && code !== 0x1BC9F) // Mn [2] & Cf [4]
+                // Znamenny Musical Notation
+                || (code >= 0x1CF00 && code <= 0x1CF2D) // Mn [46]
+                || (code >= 0x1CF30 && code <= 0x1CF46) // Mn [23]
+            ) : (
+                // Musical Symbols
+                code <= 0x1D169 // Mn [3]
+                || (code >= 0x1D173 && code <= 0x1D182) // Cf [8] & Mn [8]
+                || (code >= 0x1D185 && code <= 0x1D18B) // Mn [7]
+                || (code >= 0x1D1AA && code <= 0x1D1AD) // Mn [4]
+                // Ancient Greek Musical Notation
+                || code >= 0x1D242 // Mn [3]
+            )) ? 0 : 1
+        ) : code < 0x1DA00 ? (
+            (code <= 0x1D376 && (
+                // Tai Xuan Jing Symbols
+                (code >= 0x1D300 && code <= 0x1D356) // W [87]
+                // Counting Rod Numerals
+                || code >= 0x1D360 // W [23]
+            )) ? 2 : 1
+        ) : (code < 0x1E000 ? (
             // Sutton SignWriting
-            code >= 0x1DA00 && (
-                code <= 0x1DA36 // Mn [55]
-                || (code >= 0x1DA3B && code <= 0x1DA6C) // Mn [50]
-                || code === 0x1DA75 // Mn [1]
-                || code === 0x1DA84 // Mn [1]
-                || (code >= 0x1DA9B && code <= 0x1DAAF && code !== 0x1DAA0) // Mn [20]
-            )
+            code <= 0x1DA36 // Mn [55]
+            || (code >= 0x1DA3B && code <= 0x1DA6C) // Mn [50]
+            || code === 0x1DA75 // Mn [1]
+            || code === 0x1DA84 // Mn [1]
+            || (code >= 0x1DA9B && code <= 0x1DAAF && code !== 0x1DAA0) // Mn [20]
         ) : code < 0x1E02B ? (
             // Glagolitic Supplement
             (code <= 0x1E018 && code !== 0x1E007) // Mn [24]
@@ -710,6 +734,8 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
             || (code >= 0x1E2EC && code <= 0x1E2EF) // Mn [4]
             // Nag Mundari
             || (code >= 0x1E4EC && code <= 0x1E4EF) // Mn [4]
+            // Ol Onal
+            || (code >= 0x1E5EE && code <= 0x1E5EF) // Mn [2]
             // Mende Kikakui
             || (code >= 0x1E8D0 && code <= 0x1E8D6) // Mn [7]
             // Adlam
@@ -771,13 +797,13 @@ export default function codePointWidth(code: number): 0 | 1 | 2 {
             || (code >= 0x1F90C && code !== 0x1F93B && code !== 0x1F946) // W [242]
         ) : code <= 0x1FAF8 ? (
             // Symbols and Pictographs Extended-A
-            code >= 0x1FA70 && (code <= 0x1FAC5 ? (
+            code >= 0x1FA70 && (code <= 0x1FAC6 ? (
                 code <= 0x1FA7C // W [13]
-                || (code >= 0x1FA80 && code <= 0x1FA88) // W [9]
-                || (code >= 0x1FA90 && code !== 0x1FABE) // W [53]
+                || (code >= 0x1FA80 && code <= 0x1FA89) // W [10]
+                || code >= 0x1FA8F // W [56]
             ) : (
-                (code >= 0x1FACE && code <= 0x1FADB) // W [14]
-                || (code >= 0x1FAE0 && code <= 0x1FAE8) // W [9]
+                (code >= 0x1FACE && code <= 0x1FADC) // W [15]
+                || (code >= 0x1FADF && code <= 0x1FAE9) // W [11]
                 || code >= 0x1FAF0 // W [9]
             ))
         ) : (code >= 0x20000 && (code <= 0x2CEA1 ? (

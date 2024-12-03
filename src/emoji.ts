@@ -2,7 +2,7 @@
  * Get the emoji properties of a given unicode code point
  *
  * @remarks
- * Properties are derived from {@link https://unicode.org/Public/15.1.0/ucd/emoji/emoji-data.txt}
+ * Properties are derived from {@link https://unicode.org/Public/16.0.0/ucd/emoji/emoji-data.txt}
  *
  * @param code - unicode code point
  * @returns A bitmask encoded with the following properties:
@@ -289,12 +289,15 @@ export function emojiProps(code: number) {
     ) : code <= 0x1FAC2 ? ((
         // Symbols and Pictographs Extended-A
         (code >= 0x1FA70 && code <= 0x1FA7C) // [13]
-        || (code >= 0x1FA80 && code <= 0x1FA88) // [9]
-        || (code >= 0x1FA90 && code <= 0x1FABD) // [46]
-        || code >= 0x1FABF // [4]
+        || (code >= 0x1FA80 && code <= 0x1FA89) // [10]
+        || code >= 0x1FA8F // [52]
     ) ? 3 : 0) : code <= 0x1FAF8 ? (
-        (code <= 0x1FAC5 || code >= 0x1FAF0) ? 7
-            : ((code >= 0x1FACE && code <= 0x1FADB) || (code >= 0x1FAE0 && code <= 0x1FAE8)) ? 3 : 0 // [23]
+        (code <= 0x1FAC5 || code >= 0x1FAF0) ? 7 // [12]
+            : (
+                (code >= 0x1FADF && code <= 0x1FAE9) // [11]
+                || (code >= 0x1FACE && code <= 0x1FADC) // [15]
+                || code === 0x1FAC6 // [1]
+            ) ? 3 : 0
     ) : 0;
 }
 
