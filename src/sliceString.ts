@@ -1,5 +1,4 @@
-import parseAnsi from './parseAnsi';
-import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
+import { parseAnsi, parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 import splitChars from './splitChars';
 import charWidths from './charWidths';
 import stringLength from './stringLength';

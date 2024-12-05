@@ -1,5 +1,4 @@
-import parseAnsi from './parseAnsi';
-import { parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
+import { parseAnsi, parseEscape, openEscapes, closeEscapes, type AnsiEscape } from './utils';
 
 /**
  * Split a string with ANSI escape codes into an array of lines. Supports both `CRLF` and `LF` newlines.
