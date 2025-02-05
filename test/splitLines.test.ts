@@ -45,6 +45,14 @@ describe('splitLines', () => {
         ]);
     });
 
+    test('preserves legacy reset format for underline sgr escapes', () => {
+        expect(splitLines('\x1b[4:3mAAAA\nBB\x1b[4mBB\nC\x1b[4:0mC\x1b[4mCC\x1b[24m')).toMatchAnsi([
+            '\x1b[4:3mAAAA\x1b[4:0m',
+            '\x1b[4:3mBB\x1b[4mBB\x1b[24m',
+            '\x1b[4:3;4mC\x1b[24mC\x1b[4mCC\x1b[24m',
+        ]);
+    });
+
     test('splits sgr escape sequences that overlap across a line break', () => {
         expect(splitLines('\x1b[41mAAAA\x1b[33m\n\x1b[49mBBBB\x1b[39m')).toMatchAnsi([
             '\x1b[41mAAAA\x1b[49m',
@@ -115,10 +123,24 @@ describe('splitLines', () => {
         ]);
     });
 
+    test('supports ansi hyperlink escapes with key value pairs', () => {
+        expect(splitLines('\x1b]8;k=v;https://www.example.com\x07hello\nworld\x1b]8;;\x07')).toMatchAnsi([
+            '\x1b]8;k=v;https://www.example.com\x07hello\x1b]8;;\x07',
+            '\x1b]8;k=v;https://www.example.com\x07world\x1b]8;;\x07',
+        ]);
+    });
+
     test('supports ansi hyperlink escapes with sgr styling', () => {
         expect(splitLines('\x1b[36m\x1b]8;;link\x07\x1b[43mAA\nBB\x1b[39;49m\x1b]8;;\x07')).toMatchAnsi([
             '\x1b[36m\x1b]8;;link\x07\x1b[43mAA\x1b]8;;\x07\x1b[49;39m',
             '\x1b[36m\x1b]8;;link\x07\x1b[43mBB\x1b[49;39m\x1b]8;;\x07',
+        ]);
+    });
+
+    test('preserves the string terminator format of ansi hyperlinks', () => {
+        expect(splitLines('\x1b]8;;https://www.example.com\x1b\x5chello\nworld\x1b]8;;\x1b\x5c')).toMatchAnsi([
+            '\x1b]8;;https://www.example.com\x1b\x5chello\x1b]8;;\x1b\x5c',
+            '\x1b]8;;https://www.example.com\x1b\x5cworld\x1b]8;;\x1b\x5c',
         ]);
     });
 
