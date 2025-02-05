@@ -108,6 +108,13 @@ describe('splitLines', () => {
         ]);
     });
 
+    test('supports ansi hyperlink escapes with `+` in the url', () => {
+        expect(splitLines('\x1b]8;;https://www.example.com/?q=hello+world\x07hello\nworld\x1b]8;;\x07')).toMatchAnsi([
+            '\x1b]8;;https://www.example.com/?q=hello+world\x07hello\x1b]8;;\x07',
+            '\x1b]8;;https://www.example.com/?q=hello+world\x07world\x1b]8;;\x07',
+        ]);
+    });
+
     test('supports ansi hyperlink escapes with sgr styling', () => {
         expect(splitLines('\x1b[36m\x1b]8;;link\x07\x1b[43mAA\nBB\x1b[39;49m\x1b]8;;\x07')).toMatchAnsi([
             '\x1b[36m\x1b]8;;link\x07\x1b[43mAA\x1b]8;;\x07\x1b[49;39m',

@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import ansiRegex = require('ansi-regex');
+import ansiRegex from './ansiRegex';
 import { styleCodes, closingCodes } from './ansiCodes';
 
 /**

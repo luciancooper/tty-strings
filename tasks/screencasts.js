@@ -3,8 +3,7 @@ const fs = require('fs'),
     https = require('https'),
     { render } = require('svg-term'),
     { optimize } = require('svgo'),
-    ansiRegex = require('ansi-regex'),
-    { wordWrap, stripAnsi } = require('..'),
+    { wordWrap, stripAnsi, ansiRegex } = require('..'),
     mediaFiles = require('../media/files');
 
 const theme = {

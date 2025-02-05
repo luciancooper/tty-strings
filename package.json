@@ -62,9 +62,6 @@
   "lint-staged": {
     "*.{js,ts}": "eslint"
   },
-  "dependencies": {
-    "ansi-regex": "^5.0.0"
-  },
   "devDependencies": {
     "@commitlint/cli": "^19.2.1",
     "@lcooper/commitlint-config": "^2.0.0",

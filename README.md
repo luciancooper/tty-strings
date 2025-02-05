@@ -16,6 +16,7 @@ The goal of this project is to alleviate the headache of working with Javascript
 * Implements the Unicode grapheme cluster breaking algorithm outlined in [UAX #29](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries) to split strings into user perceived characters (graphemes).
 * Accurately measures of the visual width of strings when they are displayed in the terminal, with support for emoji characters and [ZWJ sequences](https://unicode.org/reports/tr51/#Emoji_ZWJ_Sequences). For more details see the descriptions of the [`codePointWidth`](#codepointwidthcode), [`stringWidth`](#stringwidthstring), and [`charWidths`](#charwidthsstring) functions below.
 * Provides methods for slicing and wrapping strings that contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
+* Lightweight with zero dependencies.
 
 Everything in this module is up to date with the latest version of Unicode (currently version [16.0.0](https://www.unicode.org/versions/Unicode16.0.0/)).
 
@@ -230,25 +231,6 @@ splitLines(chalk.green('foo\nbar'));
 // > ['\x1b[32mfoo\x1b[39m', '\x1b[32mbar\x1b[39m']
 ```
 
-### `stripAnsi(string)`
-
-Remove ANSI escape codes from a string.
-
-* `string` - Input string to strip.
-
-Returns `string` - the input string with all ANSI escape codes removed.
-
-This method is adapted from chalk's [`slice-ansi`](https://github.com/chalk/slice-ansi) package, and is essentially identical.
-
-**Example**
-
-```js
-const { stripAnsi } = require('tty-strings');
-
-stripAnsi('\x1b[32mfoo\x1b[39m');
-// > 'foo'
-```
-
 ### `splitChars*(string)`
 
 A generator function that splits a string into its component graphemes. Does not handle ANSI escape codes, so make sure to use [`stripAnsi`](#stripansistring) on any input string before calling this generator.
@@ -293,6 +275,47 @@ const { charWidths } = require('tty-strings');
 // > [['🙈', 2], ['🙉', 2], ['🙊', 2]]
 ```
 
+### `stripAnsi(string)`
+
+Remove ANSI escape codes from a string. This method is adapted from chalk's [`strip-ansi`](https://github.com/chalk/strip-ansi) package, but uses a more comprehensive regular expression to match escape sequences.
+
+* `string` - Input string to strip.
+
+Returns `string` - the input string with all ANSI escape codes removed.
+
+**Example**
+
+```js
+const { stripAnsi } = require('tty-strings');
+
+stripAnsi('\x1b[32mfoo\x1b[39m');
+// > 'foo'
+```
+
+### `ansiRegex([options])`
+
+Creates a regular expression that matches ANSI escape codes. This method is modeled off chalk's [`ansi-regex`](https://github.com/chalk/ansi-regex) package, but matches a more comprehensive range of escape sequences.
+
+* `options` - Optional options object to specify the `global` property detailed below.
+
+Returns `RegExp` - a regular expression object.
+
+#### `options.global`
+
+**Type:** `boolean`\
+**Default:** `true`
+
+Whether to include the global flag in the returned regular expression. Set this to `false` to only match the first escape code in the string.
+
+**Example**
+
+```js
+const { ansiRegex } = require('tty-strings');
+
+'\x1b[32mfoo\x1b[39m'.match(ansiRegex());
+// > ['\x1b[32m', '\x1b[39m']
+```
+
 ## Development
 
 Contributions are welcome!
@@ -322,6 +345,8 @@ This project was conceived of as a single module offering improved implementatio
 * [`is-fullwidth-code-point`](https://github.com/sindresorhus/is-fullwidth-code-point)
 * [`wrap-ansi`](https://github.com/chalk/wrap-ansi)
 * [`slice-ansi`](https://github.com/chalk/slice-ansi)
+* [`ansi-regex`](https://github.com/chalk/ansi-regex)
+* [`strip-ansi`](https://github.com/chalk/strip-ansi)
 
 This project's internal implementation of the Unicode grapheme cluster breaking algorithm is inspired by Devon Govett's [`grapheme-breaker`](https://github.com/foliojs/grapheme-breaker) and Orlin Georgiev's [`grapheme-splitter`](https://github.com/orling/grapheme-splitter).
 

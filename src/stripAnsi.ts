@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import ansiRegex = require('ansi-regex');
+import ansiRegex from './ansiRegex';
 
 const regex = ansiRegex();
 
@@ -7,8 +6,8 @@ const regex = ansiRegex();
  * Remove ANSI escape codes from a string.
  *
  * @remarks
- * This method is adapted from chalk's {@link https://github.com/chalk/slice-ansi|`slice-ansi`} package,
- * and is essentially identical.
+ * This method is adapted from chalk's {@link https://github.com/chalk/strip-ansi|`strip-ansi`} package,
+ * but uses a more comprehensive regular expression to match escape sequences.
  *
  * @example
  * ```ts

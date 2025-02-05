@@ -7,6 +7,8 @@ declare global {
             toMatchEachCodePoint: <E extends number | boolean>(expected?: E) => R
             toMatchEachSequence: (expected?: boolean) => R
             toMatchAnsi: (expected: string | string[]) => R
+            toMatchAll: (string: string, expected: string[]) => R
+            toMatchEscapeSequence: (sequence: string) => R
         }
     }
 }
@@ -18,7 +20,7 @@ function hex(num: number) {
 
 function escAnsi<T extends string | string[]>(arg: T): T {
     if (typeof arg !== 'string') return arg.map(escAnsi) as T;
-    return arg.replace(/[\x1B\x9B\x07]/g, (s) => {
+    return arg.replace(/[\x1b\x07\x90-\x9f]/g, (s) => {
         const cp = s.codePointAt(0)!.toString(16);
         return `\\x${'0'.repeat(Math.max(0, 2 - cp.length))}${cp}`;
     }) as T;
@@ -52,6 +54,70 @@ expect.extend({
                     'Received',
                     this.expand !== false,
                 ).replace(/\\\\(?=x)/g, '\\')
+            ),
+        };
+    },
+
+    toMatchAll(this: jest.MatcherContext, regex: RegExp, received: string, expected: string[]) {
+        // find all matches on received string
+        const receivedMatches: string[] = [];
+        for (let m = regex.exec(received); m; m = regex.global ? regex.exec(received) : null) {
+            receivedMatches.push(m[0]);
+        }
+        // check if received matches equal expected matches
+        const pass = this.equals(receivedMatches, expected, [...this.customTesters, this.utils.iterableEquality]),
+            options = { comment: 'deep equality', ...(this.isNot != null && { isNot: this.isNot }) };
+        return {
+            pass,
+            message: pass ? () => (
+                this.utils.matcherHint('toMatchAll', undefined, undefined, options)
+                + '\n\n'
+                + `Expected: not ${this.utils.printExpected(escAnsi(expected)).replace(/\\\\(?=x)/g, '\\')}`
+            ) : () => (
+                this.utils.matcherHint('toMatchAll', undefined, undefined, options)
+                + '\n\n'
+                + this.utils.printDiffOrStringify(
+                    escAnsi(expected),
+                    escAnsi(receivedMatches),
+                    'Expected',
+                    'Received',
+                    this.expand !== false,
+                ).replace(/\\\\(?=x)/g, '\\')
+            ),
+        };
+    },
+
+    toMatchEscapeSequence(this: jest.MatcherContext, received: RegExp, sequence: string) {
+        const options = { ...(this.isNot != null && { isNot: this.isNot }) };
+        let pass = sequence.replace(received, '') === '';
+        if (!pass) {
+            return {
+                pass,
+                message: () => (
+                    this.utils.matcherHint('toMatchEscapeSequence', undefined, undefined, options)
+                    + '\n\n'
+                    + `Expected to${this.isNot ? ' not' : ''} match escape sequence: ${
+                        this.utils.printExpected(escAnsi(sequence)).replace(/\\\\(?=x)/g, '\\')
+                    }`
+                ),
+            };
+        }
+        // check for overconsumed characters
+        let overconsumed = '';
+        for (let cp = 0x20; cp < 0x7f; cp += 1) {
+            const char = String.fromCodePoint(cp);
+            if ((sequence + char).replace(received, '') !== char) overconsumed += char;
+        }
+        pass = overconsumed.length === 0;
+        return {
+            pass,
+            message: () => (
+                this.utils.matcherHint('toMatchEscapeSequence', undefined, undefined, options)
+                + '\n\n'
+                + `Expected to${this.isNot ? ' not' : ''} match escape sequence ${
+                    this.utils.printExpected(escAnsi(sequence)).replace(/\\\\(?=x)/g, '\\')
+                } without overconsuming subsequent characters`
+                + (!pass ? `\n\nOverconsumed ${this.utils.printReceived(overconsumed)}` : '')
             ),
         };
     },

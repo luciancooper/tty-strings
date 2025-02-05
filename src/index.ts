@@ -2,6 +2,7 @@ export { default as stringWidth } from './stringWidth';
 export { default as stringLength } from './stringLength';
 export { default as splitChars } from './splitChars';
 export { default as charWidths } from './charWidths';
+export { default as ansiRegex } from './ansiRegex';
 export { default as stripAnsi } from './stripAnsi';
 export { default as codePointWidth } from './codePoint';
 export { default as splitLines } from './splitLines';
