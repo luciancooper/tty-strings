@@ -34,7 +34,7 @@ describe('spliceChars', () => {
             expect(spliceChars(chalk.green('abcd'), 4, 0, 'EF')).toMatchAnsi(chalk.green('abcdEF'));
         });
 
-        test('between ansi escape sequences', () => {
+        test('between SGR escape sequences', () => {
             expect(spliceChars(chalk.green('ab') + chalk.red('ef'), 2, 0, 'CD'))
                 .toMatchAnsi(chalk.green('abCD') + chalk.red('ef'));
             expect(spliceChars(chalk.green('ab') + chalk.red('cf'), 3, 0, 'DE'))
@@ -43,7 +43,7 @@ describe('spliceChars', () => {
                 .toMatchAnsi(`${chalk.green('a')}bC${chalk.red('def')}`);
         });
 
-        test('between compound sgr escape sequences', () => {
+        test('between compound SGR escape sequences', () => {
             // insert into first stretch of sgr styled text
             expect(spliceChars('\x1b[31;42mab\x1b[39;49m\x1b[32;41mef\x1b[39;49m', 2, 0, 'CD'))
                 .toMatchAnsi('\x1b[31;42mabCD\x1b[49;39m\x1b[32;41mef\x1b[39;49m');
@@ -55,7 +55,7 @@ describe('spliceChars', () => {
                 .toMatchAnsi('\x1b[31;42ma\x1b[39;49mbC\x1b[32;41mdef\x1b[39;49m');
         });
 
-        test('preserves non sgr/hyperlink escape sequences', () => {
+        test('preserves non SGR/OSC hyperlink escape sequences', () => {
             // right before ESC[A control sequence
             expect(spliceChars('ab\x1b[Aef', 2, 0, 'CD')).toMatchAnsi('abCD\x1b[Aef');
         });
@@ -96,7 +96,7 @@ describe('spliceChars', () => {
             expect(spliceChars(chalk.green('abcdef'), 2, 8)).toMatchAnsi(chalk.green('ab'));
         });
 
-        test('preserves non sgr/hyperlink escape sequences', () => {
+        test('preserves non SGR/OSC hyperlink escape sequences', () => {
             // across a ESC[A control sequence
             expect(spliceChars('ab\x1b[Acd', 1, 2)).toMatchAnsi('a\x1b[Ad');
         });
@@ -129,7 +129,7 @@ describe('spliceChars', () => {
                 .toMatchAnsi(chalk.bgRed.green('ABCDEF'));
         });
 
-        test('preserves non sgr/hyperlink escape sequences', () => {
+        test('preserves non SGR/OSC hyperlink escape sequences', () => {
             // before a ESC[A control sequence
             expect(spliceChars('ab\x1b[Acd', 1, 2, 'BC')).toMatchAnsi('aBC\x1b[Ad');
         });

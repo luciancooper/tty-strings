@@ -67,38 +67,24 @@ describe('wordWrap', () => {
         expect(wordWrap('\x1b[31;39m', 6)).toMatchAnsi('');
     });
 
-    test('wraps ansi escape sequences', () => {
+    test('wraps SGR escape sequences', () => {
         expect(wordWrap('aa \x1b[31mbbb ccc\x1b[39m dd', 6)).toMatchAnsi(
             'aa \x1b[31mbbb\x1b[39m\n'
             + '\x1b[31mccc\x1b[39m dd',
         );
     });
 
-    test('wraps compound sgr escape sequences', () => {
+    test('wraps compound SGR escape sequences', () => {
         expect(wordWrap('aa \x1b[31;42mbbb ccc\x1b[39;49m dd', 6)).toMatchAnsi(
             'aa \x1b[31;42mbbb\x1b[49;39m\n'
             + '\x1b[31;42mccc\x1b[49;39m dd',
         );
     });
 
-    test('hard wraps ansi escape sequences', () => {
+    test('hard wraps SGR escape sequences', () => {
         expect(wordWrap('aa \x1b[41mbbbbbbb c\x1b[49m', 6, { hard: true })).toMatchAnsi(
             'aa \x1b[41mbbb\x1b[49m\n'
             + '\x1b[41mbbbb c\x1b[49m',
-        );
-    });
-
-    test('wraps hyperlink escape sequences', () => {
-        expect(wordWrap('aa \x1b]8;;link\x07bbb ccc\x1b]8;;\x07 dd', 6)).toMatchAnsi(
-            'aa \x1b]8;;link\x07bbb\x1b]8;;\x07\n'
-            + '\x1b]8;;link\x07ccc\x1b]8;;\x07 dd',
-        );
-    });
-
-    test('hard wraps hyperlink escape sequences', () => {
-        expect(wordWrap('aa \x1b]8;;link\x07bbbbbbb\x1b]8;;\x07 c', 6, { hard: true })).toMatchAnsi(
-            'aa \x1b]8;;link\x07bbb\x1b]8;;\x07\n'
-            + '\x1b]8;;link\x07bbbb\x1b]8;;\x07 c',
         );
     });
 
@@ -123,66 +109,11 @@ describe('wordWrap', () => {
         );
     });
 
-    test('wraps hyperlink escapes within background styling', () => {
-        expect(wordWrap('aa \x1b[41m\x1b]8;;link\x07bbb ccc\x1b]8;;\x07 dd\x1b[49m', 6)).toMatchAnsi(
-            'aa \x1b[41m\x1b]8;;link\x07bbb\x1b]8;;\x07\x1b[49m\n'
-            + '\x1b[41m\x1b]8;;link\x07ccc\x1b]8;;\x07 dd\x1b[49m',
-        );
-    });
-
-    test('hard wraps hyperlink escapes that contain background styling', () => {
-        expect(wordWrap('a \x1b]8;;link\x07\x1b[41mbbbb\x1b[49mbbb\x1b]8;;\x07 cc', 6, {
-            hard: true,
-        })).toMatchAnsi(
-            'a \x1b]8;;link\x07\x1b[41mbbbb\x1b[49m\x1b]8;;\x07\n'
-            + '\x1b]8;;link\x07bbb\x1b]8;;\x07 cc',
-        );
-    });
-
-    test('hard wraps hyperlink escapes that overlap with background styling', () => {
-        expect(wordWrap('aa bb\x1b]8;;link\x07bbb\x1b[41mbb \x1b]8;;\x07c\x1b[49m', 6, {
-            hard: true,
-        })).toMatchAnsi(
-            'aa bb\x1b]8;;link\x07b\x1b]8;;\x07\n'
-            + '\x1b]8;;link\x07bb\x1b[41mbb \x1b]8;;\x07c\x1b[49m',
-        );
-    });
-
     test('handles escape sequences that span multiple input lines', () => {
         expect(wordWrap('\x1b[41maaaa \x1b[33mbbb\nccc\x1b[39m dd\x1b[49m', 6)).toMatchAnsi(
             '\x1b[41maaaa\x1b[49m\n'
             + '\x1b[41;33mbbb\x1b[39;49m\n'
             + '\x1b[41;33mccc\x1b[39m dd\x1b[49m',
-        );
-    });
-
-    test('handles ESC[0m reset escape codes', () => {
-        expect(wordWrap('\x1b[41maa \x1b[32mbb \x1b[0mccc', 6)).toMatchAnsi(
-            '\x1b[41maa \x1b[32mbb\x1b[0m\n'
-            + 'ccc',
-        );
-    });
-
-    test('handles ESC[m implied reset escape codes', () => {
-        // when no code is given on an sgr escape, it is treated as a reset code
-        expect(wordWrap('\x1b[41maa \x1b[32mbb \x1b[mccc', 6)).toMatchAnsi(
-            '\x1b[41maa \x1b[32mbb\x1b[0m\n'
-            + 'ccc',
-        );
-    });
-
-    test('handles compound sgr sequences with both opening and reset ESC[0m codes', () => {
-        expect(wordWrap('aa \x1b[0;32mbb \x1b[0mccc', 6)).toMatchAnsi(
-            'aa \x1b[32mbb\x1b[0m\n'
-            + 'ccc',
-        );
-    });
-
-    test('handles ESC[;#m implied resets in compound sgr codes', () => {
-        // when no code is given on an sgr escape, it is treated as a reset code
-        expect(wordWrap('\x1b[41maa \x1b[;32mbb \x1b[39mccc', 6)).toMatchAnsi(
-            '\x1b[41maa \x1b[0m\x1b[32mbb\x1b[39m\n'
-            + 'ccc',
         );
     });
 
@@ -194,7 +125,7 @@ describe('wordWrap', () => {
         );
     });
 
-    test('scrubs non SGR/hyperlink escape sequences', () => {
+    test('scrubs non SGR/OSC hyperlink escape sequences', () => {
         // contains a window title escape sequence
         expect(wordWrap('aa bbb\x1b]0;window_title\x07 ccc', 6)).toMatchAnsi(
             'aa bbb\n'
@@ -202,7 +133,7 @@ describe('wordWrap', () => {
         );
     });
 
-    test('scrubs non SGR/hyperlink escape sequences when hard wrapping', () => {
+    test('scrubs non SGR/OSC hyperlink escape sequences when hard wrapping', () => {
         // contains a cursor up escape sequence
         expect(wordWrap('aaaaaa\x1b[Aaaa cc', 6, { hard: true })).toMatchAnsi(
             'aaaaaa\n'
@@ -218,16 +149,89 @@ describe('wordWrap', () => {
         );
     });
 
-    test('handles compound sgr sequences with both opening and closing codes', () => {
+    test('handles compound SGR sequences with both opening and closing codes', () => {
         expect(wordWrap('\x1b[45maa \x1b[49;31mbbb ccc\x1b[39m dd', 6)).toMatchAnsi(
             '\x1b[45maa \x1b[49m\x1b[31mbbb\x1b[39m\n'
             + '\x1b[31mccc\x1b[39m dd',
         );
     });
 
-    test('handles text with unclosed escape sequences', () => {
+    test('handles text with unclosed SGR escape sequences', () => {
         // closes the unclosed bg style escape
         expect(wordWrap('\x1b[45maa bbb', 6)).toMatchAnsi('\x1b[45maa bbb\x1b[49m');
+    });
+
+    describe('OSC hyperlink escapes', () => {
+        test('wraps OSC hyperlink escape sequences', () => {
+            expect(wordWrap('aa \x1b]8;;link\x07bbb ccc\x1b]8;;\x07 dd', 6)).toMatchAnsi(
+                'aa \x1b]8;;link\x07bbb\x1b]8;;\x07\n'
+                + '\x1b]8;;link\x07ccc\x1b]8;;\x07 dd',
+            );
+        });
+
+        test('hard wraps OSC hyperlink escape sequences', () => {
+            expect(wordWrap('aa \x1b]8;;link\x07bbbbbbb\x1b]8;;\x07 c', 6, { hard: true })).toMatchAnsi(
+                'aa \x1b]8;;link\x07bbb\x1b]8;;\x07\n'
+                + '\x1b]8;;link\x07bbbb\x1b]8;;\x07 c',
+            );
+        });
+
+        test('wraps OSC hyperlink escapes within background styling', () => {
+            expect(wordWrap('aa \x1b[41m\x1b]8;;link\x07bbb ccc\x1b]8;;\x07 dd\x1b[49m', 6)).toMatchAnsi(
+                'aa \x1b[41m\x1b]8;;link\x07bbb\x1b]8;;\x07\x1b[49m\n'
+                + '\x1b[41m\x1b]8;;link\x07ccc\x1b]8;;\x07 dd\x1b[49m',
+            );
+        });
+
+        test('hard wraps OSC hyperlink escapes that contain background styling', () => {
+            expect(wordWrap('a \x1b]8;;link\x07\x1b[41mbbbb\x1b[49mbbb\x1b]8;;\x07 cc', 6, {
+                hard: true,
+            })).toMatchAnsi(
+                'a \x1b]8;;link\x07\x1b[41mbbbb\x1b[49m\x1b]8;;\x07\n'
+                + '\x1b]8;;link\x07bbb\x1b]8;;\x07 cc',
+            );
+        });
+
+        test('hard wraps OSC hyperlink escapes that overlap with background styling', () => {
+            expect(wordWrap('aa bb\x1b]8;;link\x07bbb\x1b[41mbb \x1b]8;;\x07c\x1b[49m', 6, {
+                hard: true,
+            })).toMatchAnsi(
+                'aa bb\x1b]8;;link\x07b\x1b]8;;\x07\n'
+                + '\x1b]8;;link\x07bb\x1b[41mbb \x1b]8;;\x07c\x1b[49m',
+            );
+        });
+    });
+
+    describe('SGR reset escapes', () => {
+        test('handles ESC[0m reset escape codes', () => {
+            expect(wordWrap('\x1b[41maa \x1b[32mbb \x1b[0mccc', 6)).toMatchAnsi(
+                '\x1b[41maa \x1b[32mbb\x1b[0m\n'
+                + 'ccc',
+            );
+        });
+
+        test('handles ESC[m implied reset escape codes', () => {
+            // when no code is given on an sgr escape, it is treated as a reset code
+            expect(wordWrap('\x1b[41maa \x1b[32mbb \x1b[mccc', 6)).toMatchAnsi(
+                '\x1b[41maa \x1b[32mbb\x1b[0m\n'
+                + 'ccc',
+            );
+        });
+
+        test('handles compound SGR sequences with both opening and reset ESC[0m codes', () => {
+            expect(wordWrap('aa \x1b[0;32mbb \x1b[0mccc', 6)).toMatchAnsi(
+                'aa \x1b[32mbb\x1b[0m\n'
+                + 'ccc',
+            );
+        });
+
+        test('handles ESC[;#m implied resets in compound SGR codes', () => {
+            // when no code is given on an sgr escape, it is treated as a reset code
+            expect(wordWrap('\x1b[41maa \x1b[;32mbb \x1b[39mccc', 6)).toMatchAnsi(
+                '\x1b[41maa \x1b[0m\x1b[32mbb\x1b[39m\n'
+                + 'ccc',
+            );
+        });
     });
 
     describe('closing escape sequences at a word boundary following a line break', () => {
