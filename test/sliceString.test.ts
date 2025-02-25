@@ -124,6 +124,10 @@ describe('sliceChars', () => {
             expect(sliceChars('\x1b[32mfoo\x1b[41mba\x1b[mr', 2)).toMatchAnsi('\x1b[32mo\x1b[41mba\x1b[0mr');
         });
 
+        test('supports ESC[:m implied reset escapes', () => {
+            expect(sliceChars('\x1b[32mfoo\x1b[41mba\x1b[:mr', 2)).toMatchAnsi('\x1b[32mo\x1b[41mba\x1b[0mr');
+        });
+
         test('supports compound SGR sequences with both opening and reset ESC[0m codes', () => {
             // slice ends after ESC[0m code
             expect(sliceChars('AAA\x1b[0;33mBBBCCC\x1b[0mDDD', 2, 11)).toMatchAnsi('A\x1b[33mBBBCCC\x1b[0mDD');
@@ -137,42 +141,90 @@ describe('sliceChars', () => {
     });
 
     describe('SGR 8 bit color escapes', () => {
-        test('supports 8 bit color SGR sequences', () => {
-            // foreground 55 & background 176
+        test('supports 8 bit sequences with ; delimiters', () => {
+            // foreground [38;5;55] + background [48;5;176]
             expect(sliceChars('\x1b[38;5;55m\x1b[48;5;176mfoobar\x1b[49m\x1b[39m', 0, 3))
                 .toMatchAnsi('\x1b[38;5;55;48;5;176mfoo\x1b[49;39m');
         });
 
-        test('supports 8 bit color SGR sequences with implied arguments', () => {
-            // foreground 0 & background 176
-            expect(sliceChars('\x1b[38;5;;48;5;176mfoobar\x1b[49;39m', 0, 3))
-                .toMatchAnsi('\x1b[38;5;;48;5;176mfoo\x1b[49;39m');
+        test('supports 8 bit sequences with : subparam delimiters', () => {
+            // foreground [38:5:55] + background [48:5]
+            expect(sliceChars('\x1b[38:5:55m\x1b[48:5mfoobar\x1b[49m\x1b[39m', 0, 3))
+                .toMatchAnsi('\x1b[38:5:55;48:5mfoo\x1b[49;39m');
         });
 
-        test('supports 8 bit color SGR sequences with no arguments', () => {
-            // foreground 0
-            expect(sliceChars('\x1b[38;5mfoobar\x1b[39m', 0, 3))
-                .toMatchAnsi('\x1b[38;5mfoo\x1b[39m');
+        test('supports 8 bit sequences with mixed ; & : subparam delimiters', () => {
+            // foreground [38;5:55] + background [48;5:24:]
+            expect(sliceChars('\x1b[38;5:55m\x1b[48;5:24:mfoobar\x1b[49m\x1b[39m', 0, 3))
+                .toMatchAnsi('\x1b[38;5:55;48;5:24:mfoo\x1b[49;39m');
+        });
+
+        test('supports 8 bit sequences with implied / missing ; delimited arguments', () => {
+            // foreground [38;5;] + background [48;5]
+            expect(sliceChars('\x1b[38;5;m\x1b[48;5mfoobar\x1b[49;39m', 0, 3))
+                .toMatchAnsi('\x1b[38;5;;48;5mfoo\x1b[49;39m');
+        });
+
+        test('does not group consecutive 8 bit sequences with missing ; delimited arguments', () => {
+            // foreground [38;5] + background [48;5]
+            expect(sliceChars('\x1b[38;5m\x1b[48;5mfoobar\x1b[39m\x1b[49m', 0, 3))
+                .toMatchAnsi('\x1b[38;5m\x1b[48;5mfoo\x1b[49;39m');
         });
     });
 
     describe('SGR 24 bit color escapes', () => {
-        test('supports 24 bit color SGR sequences', () => {
-            // foreground #6134eb & background #ccc0f0
+        test('supports 24 bit sequences with ; delimiters', () => {
+            // foreground [38;2;97;52;235] + background [48;2;204;192;240]
             expect(sliceChars('\x1b[38;2;97;52;235m\x1b[48;2;204;192;240mfoobar\x1b[49m\x1b[39m', 0, 3))
                 .toMatchAnsi('\x1b[38;2;97;52;235;48;2;204;192;240mfoo\x1b[49;39m');
         });
 
-        test('supports 24 bit color SGR sequences with implied arguments', () => {
-            // foreground #00ff00 & background #cc00dd
-            expect(sliceChars('\x1b[38;2;;255;;48;2;204;;221mfoobar\x1b[49;39m', 0, 3))
-                .toMatchAnsi('\x1b[38;2;;255;;48;2;204;;221mfoo\x1b[49;39m');
+        test('supports 24 bit sequences with : suparam delimiters', () => {
+            // foreground [38:2::97:52:235] + background [48:2:204:192:240]
+            expect(sliceChars('\x1b[38:2::97:52:235m\x1b[48:2:204:192:240mfoobar\x1b[49m\x1b[39m', 0, 3))
+                .toMatchAnsi('\x1b[38:2::97:52:235;48:2:204:192:240mfoo\x1b[49;39m');
         });
 
-        test('supports 24 bit color SGR sequences with missing arguments', () => {
-            // foreground #ff0000
-            expect(sliceChars('\x1b[38;2;255mfoobar\x1b[39m', 0, 3))
-                .toMatchAnsi('\x1b[38;2;255mfoo\x1b[39m');
+        test('supports 24 bit sequences with mixed ; & : subparam delimiters', () => {
+            // foreground [38;2;97:52:235] + background [48;2;204;192:240]
+            expect(sliceChars('\x1b[38;2;97:52:235;48;2;204;192:240mfoobar\x1b[49;39m', 0, 3))
+                .toMatchAnsi('\x1b[38;2;97:52:235;48;2;204;192:240mfoo\x1b[49;39m');
+        });
+
+        test('supports 24 bit sequences with implied / missing : subparam arguments', () => {
+            // foreground [38:2:::255:] + background [48:2:204:]
+            expect(sliceChars('\x1b[38:2:::255:m\x1b[48:2:204:mfoobar\x1b[49;39m', 0, 3))
+                .toMatchAnsi('\x1b[38:2:::255:;48:2:204:mfoo\x1b[49;39m');
+        });
+
+        test('supports 24 bit sequences with implied / missing ; delimited arguments', () => {
+            // foreground [38;2;;255;] + background [48;2;255]
+            expect(sliceChars('\x1b[38;2;;255;m\x1b[48;2;255mfoobar\x1b[49;39m', 0, 3))
+                .toMatchAnsi('\x1b[38;2;;255;;48;2;255mfoo\x1b[49;39m');
+        });
+
+        test('does not group consecutive 24 bit sequences with missing ; delimited arguments', () => {
+            // foreground [38;2;] + background [48;2;150;]
+            expect(sliceChars('\x1b[38;2;m\x1b[48;2;150;mfoobar\x1b[39m\x1b[49m', 0, 3))
+                .toMatchAnsi('\x1b[38;2;m\x1b[48;2;150;mfoo\x1b[49;39m');
+        });
+    });
+
+    describe('SGR underline escapes with subparameters', () => {
+        test('uses 4:0 sequence to close underline escapes with subparameters', () => {
+            expect(sliceChars('\x1b[4:2mfoobar\x1b[m', 1, 4)).toMatchAnsi('\x1b[4:2moob\x1b[4:0m');
+        });
+
+        test('closes 4:x underline escapes with subparameter values greater than 5', () => {
+            expect(sliceChars('\x1b[4:6mfoobar\x1b[m', 1, 4)).toMatchAnsi('\x1b[4:6moob\x1b[4:0m');
+        });
+
+        test('interprets 4: implied argument as solid style underline', () => {
+            expect(sliceChars('\x1b[4:mfoobar\x1b[24m', 1, 4)).toMatchAnsi('\x1b[4:moob\x1b[4:0m');
+        });
+
+        test('reset code 24 overrides 4:0 format when legacy escapes are used', () => {
+            expect(sliceChars('\x1b[4:2;21mfoobar\x1b[m', 1, 4)).toMatchAnsi('\x1b[4:2;21moob\x1b[24m');
         });
     });
 

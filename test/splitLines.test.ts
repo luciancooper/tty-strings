@@ -68,14 +68,6 @@ describe('splitLines', () => {
         ]);
     });
 
-    test('preserves legacy reset format for underline SGR escapes', () => {
-        expect(splitLines('\x1b[4:3mAAAA\nBB\x1b[4mBB\nC\x1b[4:0mC\x1b[4mCC\x1b[24m')).toMatchAnsi([
-            '\x1b[4:3mAAAA\x1b[4:0m',
-            '\x1b[4:3mBB\x1b[4mBB\x1b[24m',
-            '\x1b[4:3;4mC\x1b[24mC\x1b[4mCC\x1b[24m',
-        ]);
-    });
-
     describe('superfluous SGR escapes', () => {
         test('scrubs empty SGR sequences', () => {
             expect(splitLines('AA\x1b[41m\x1b[49mA\nBB')).toMatchAnsi(['AAA', 'BB']);
@@ -106,6 +98,13 @@ describe('splitLines', () => {
             ]);
         });
 
+        test('supports ESC[:m implied reset escapes', () => {
+            expect(splitLines('\x1b[41;32mAAAA\nBB\x1b[:mBB')).toMatchAnsi([
+                '\x1b[41;32mAAAA\x1b[39;49m',
+                '\x1b[41;32mBB\x1b[0mBB',
+            ]);
+        });
+
         test('supports compound SGR sequences with both opening and reset ESC[0m codes', () => {
             expect(splitLines('AAA\x1b[0;33mBBB\nCCC\x1b[0mDDD')).toMatchAnsi([
                 'AAA\x1b[33mBBB\x1b[39m',
@@ -117,6 +116,123 @@ describe('splitLines', () => {
             expect(splitLines('\x1b[41;32mAAAA\nBB\x1b[;33mBB\x1b[39m')).toMatchAnsi([
                 '\x1b[41;32mAAAA\x1b[39;49m',
                 '\x1b[41;32mBB\x1b[0m\x1b[33mBB\x1b[39m',
+            ]);
+        });
+    });
+
+    describe('SGR 38, 48, 58 color escapes', () => {
+        test('8 & 24 bit sequences with ; delimiters', () => {
+            // foreground [38;5;164] + background [48;2;50;168;133]
+            expect(splitLines(
+                '\x1b[38;5;164;48;2;50;168;133mAAAAAA\nBBB\x1b[39mBBB\nCCCCCC\x1b[49m',
+            )).toMatchAnsi([
+                '\x1b[38;5;164;48;2;50;168;133mAAAAAA\x1b[49;39m',
+                '\x1b[38;5;164;48;2;50;168;133mBBB\x1b[39mBBB\x1b[49m',
+                '\x1b[48;2;50;168;133mCCCCCC\x1b[49m',
+            ]);
+        });
+
+        test('8 & 24 bit sequences with : subparam delimiters', () => {
+            // foreground [38:2::168:50:158] + background [48:2:50:168:133] + underline [58:5:202]
+            expect(splitLines(
+                '\x1b[38:2::168:50:158;48:2:50:168:133;58:5:202mAAAAAA\nBBB\x1b[39mBBB\nCCCCCC\x1b[49;59m',
+            )).toMatchAnsi([
+                '\x1b[38:2::168:50:158;48:2:50:168:133;58:5:202mAAAAAA\x1b[59;49;39m',
+                '\x1b[38:2::168:50:158;48:2:50:168:133;58:5:202mBBB\x1b[39mBBB\x1b[59;49m',
+                '\x1b[48:2:50:168:133;58:5:202mCCCCCC\x1b[59;49m',
+            ]);
+        });
+
+        test('8 & 24 bit sequences with mixed ; & : subparam delimiters', () => {
+            // foreground [38;5:164] + background [48;2:50:168:133] + underline [58;2;217:141:20]
+            expect(splitLines(
+                '\x1b[38;5:164;48;2:50:168:133;58;2;217:141:20mAAAAAA\nBBB\x1b[49mBBB\nCCCCCC\x1b[39;59m',
+            )).toMatchAnsi([
+                '\x1b[38;5:164;48;2:50:168:133;58;2;217:141:20mAAAAAA\x1b[59;49;39m',
+                '\x1b[38;5:164;48;2:50:168:133;58;2;217:141:20mBBB\x1b[49mBBB\x1b[59;39m',
+                '\x1b[38;5:164;58;2;217:141:20mCCCCCC\x1b[59;39m',
+            ]);
+        });
+
+        test('8 & 24 bit sequences with ; delimiters and implied / missing arguments', () => {
+            // foreground [38;2;168;;158] / [38;5] + background [48;5;] + underline [58;2;]
+            expect(splitLines(
+                '\x1b[38;2;168;;158;48;5;;58;2;mAAAAAA\nBBB\x1b[39;38;5mBBB\nCCCCCC\x1b[m',
+            )).toMatchAnsi([
+                '\x1b[38;2;168;;158;48;5;;58;2;mAAAAAA\x1b[59;49;39m',
+                '\x1b[38;2;168;;158;48;5;;58;2;mBBB\x1b[39m\x1b[38;5mBBB\x1b[39;59;49m',
+                '\x1b[48;5;;58;2;m\x1b[38;5mCCCCCC\x1b[0m',
+            ]);
+        });
+
+        test('8 & 24 bit sequences with : subparam delimiters and implied / missing arguments', () => {
+            // foreground [38:2:::50:158] + background [48:5] + underline [58:2:217::20] / [58:2:217:141]
+            expect(splitLines(
+                '\x1b[38:2:::50:158;48:5;58:2:217::20mAAAAAA\nBB\x1b[39;59mBB\x1b[58:2:217:141mBB\nCCCCCC\x1b[49;59m',
+            )).toMatchAnsi([
+                '\x1b[38:2:::50:158;48:5;58:2:217::20mAAAAAA\x1b[59;49;39m',
+                '\x1b[38:2:::50:158;48:5;58:2:217::20mBB\x1b[59;39mBB\x1b[58:2:217:141mBB\x1b[59;49m',
+                '\x1b[48:5;58:2:217:141mCCCCCC\x1b[59;49m',
+            ]);
+        });
+
+        test('8 & 24 bit sequences with mixed ; & : subparam delimiters and implied / missing arguments', () => {
+            // foreground [38;2:168:50] + background [48;5:] / [48;2;50;168:] + underline [58;2;:141]
+            expect(splitLines(
+                '\x1b[38;2:168:50;48;5:;58;2;:141mAAAAAA\nBBB\x1b[49;48;2;50;168:mBBB\nCCCCCC\x1b[39;49;59m',
+            )).toMatchAnsi([
+                '\x1b[38;2:168:50;48;5:;58;2;:141mAAAAAA\x1b[59;49;39m',
+                '\x1b[38;2:168:50;48;5:;58;2;:141mBBB\x1b[49m\x1b[48;2;50;168:mBBB\x1b[49;59;39m',
+                '\x1b[38;2:168:50;58;2;:141;48;2;50;168:mCCCCCC\x1b[49;59;39m',
+            ]);
+        });
+
+        test('handles non 8 or 24 bit color model sequences', () => {
+            // foreground [38;0] + background [48;] + underline [58:0]
+            expect(splitLines('\x1b[38;0;48;;58:0mAAAAAA\nBBB\x1b[59mBBB\nCCCCCC\x1b[39;49m')).toMatchAnsi([
+                '\x1b[38;0;48;;58:0mAAAAAA\x1b[59;49;39m',
+                '\x1b[38;0;48;;58:0mBBB\x1b[59mBBB\x1b[49;39m',
+                '\x1b[38;0;48;mCCCCCC\x1b[49;39m',
+            ]);
+        });
+
+        test('handles sequences with missing color model arguments', () => {
+            // foreground [38] + background [48] + underline [58]
+            expect(splitLines('\x1b[38m\x1b[48m\x1b[58mAAAAAA\nBBB\x1b[39mBBB\nCCCCCC\x1b[49;59m')).toMatchAnsi([
+                '\x1b[38m\x1b[48m\x1b[58mAAAAAA\x1b[59;49;39m',
+                '\x1b[38m\x1b[48m\x1b[58mBBB\x1b[39mBBB\x1b[59;49m',
+                '\x1b[48m\x1b[58mCCCCCC\x1b[59;49m',
+            ]);
+        });
+    });
+
+    describe('SGR underline escapes with subparameters', () => {
+        test('uses 4:0 sequence to close underline escapes with subparameters', () => {
+            expect(splitLines('\x1b[4:2mAAAAAA\nBBBBBB\x1b[m')).toMatchAnsi([
+                '\x1b[4:2mAAAAAA\x1b[4:0m',
+                '\x1b[4:2mBBBBBB\x1b[0m',
+            ]);
+        });
+
+        test('interprets 4: implied argument as solid style underline', () => {
+            expect(splitLines('\x1b[4:mAAAAAA\nBBBBBB\x1b[4:0m')).toMatchAnsi([
+                '\x1b[4:mAAAAAA\x1b[4:0m',
+                '\x1b[4:mBBBBBB\x1b[4:0m',
+            ]);
+        });
+
+        test('a 4:0 sequence closes all underline escapes', () => {
+            expect(splitLines('\x1b[4:1mAAAAAA\nB\x1b[4:0mBB\x1b[21mBB\x1b[4:0mB')).toMatchAnsi([
+                '\x1b[4:1mAAAAAA\x1b[4:0m',
+                '\x1b[4:1mB\x1b[4:0mBB\x1b[21mBB\x1b[24mB',
+            ]);
+        });
+
+        test('reset code 24 overrides 4:0 format when legacy escapes are used', () => {
+            expect(splitLines('\x1b[4:3mAAAA\nBB\x1b[4mBB\nC\x1b[24mCCC')).toMatchAnsi([
+                '\x1b[4:3mAAAA\x1b[4:0m',
+                '\x1b[4:3mBB\x1b[4mBB\x1b[24m',
+                '\x1b[4:3;4mC\x1b[24mCCC',
             ]);
         });
     });

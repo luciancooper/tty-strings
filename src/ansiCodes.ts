@@ -11,11 +11,7 @@ export const styleCodes = new Map([
     ['2', '22'], // dim
     ['3', '23'], // italic
     ['4', '24'], // underline single
-    ['4:1', '4:0'], // underline single
-    ['4:2', '4:0'], // underline double
-    ['4:3', '4:0'], // underline curly
-    ['4:4', '4:0'], // underline dotted
-    ['4:5', '4:0'], // underline dashed
+    ['4:', '4:0'], // underline with params
     ['5', '25'], // slow blink
     ['6', '25'], // rapid blink
     ['7', '27'], // inverse
@@ -93,8 +89,3 @@ export const closingCodes = [
     '65', // no ideogram attributes
     '75', // not superscript nor subscript
 ];
-
-export const closingCodeAliases = new Map([
-    ['4:0', ['4:0', '24']],
-    ['24', ['4:0', '24']],
-]);
