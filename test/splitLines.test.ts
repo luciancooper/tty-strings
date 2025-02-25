@@ -238,38 +238,55 @@ describe('splitLines', () => {
     });
 
     describe('OSC hyperlink escapes', () => {
-        test('supports OSC hyperlink escapes', () => {
+        test('supports hyperlink escapes', () => {
             expect(splitLines('\x1b]8;;link\x07AA\nB\x1b]8;;\x07b')).toMatchAnsi([
                 '\x1b]8;;link\x07AA\x1b]8;;\x07',
                 '\x1b]8;;link\x07B\x1b]8;;\x07b',
             ]);
         });
 
-        test('supports OSC hyperlink escapes with `+` in the url', () => {
+        test('supports hyperlink escapes with `+` in the url', () => {
             expect(splitLines('\x1b]8;;https://www.example.com/?q=hello+world\x07hello\nworld\x1b]8;;\x07')).toMatchAnsi([
                 '\x1b]8;;https://www.example.com/?q=hello+world\x07hello\x1b]8;;\x07',
                 '\x1b]8;;https://www.example.com/?q=hello+world\x07world\x1b]8;;\x07',
             ]);
         });
 
-        test('supports OSC hyperlink escapes with key value pairs', () => {
+        test('supports hyperlink escapes with key value pairs', () => {
             expect(splitLines('\x1b]8;k=v;https://www.example.com\x07hello\nworld\x1b]8;;\x07')).toMatchAnsi([
                 '\x1b]8;k=v;https://www.example.com\x07hello\x1b]8;;\x07',
                 '\x1b]8;k=v;https://www.example.com\x07world\x1b]8;;\x07',
             ]);
         });
 
-        test('supports OSC hyperlink escapes with SGR styling', () => {
+        test('supports hyperlink closing escapes with key value pairs', () => {
+            expect(splitLines(
+                '\x1b]8;id=value;https://www.example.com\x07AAAAAA\nBBB\x1b]8;id=value;\x07BBB\nCCCCCC',
+            )).toMatchAnsi([
+                '\x1b]8;id=value;https://www.example.com\x07AAAAAA\x1b]8;;\x07',
+                '\x1b]8;id=value;https://www.example.com\x07BBB\x1b]8;id=value;\x07BBB',
+                'CCCCCC',
+            ]);
+        });
+
+        test('supports hyperlink escapes with SGR styling', () => {
             expect(splitLines('\x1b[36m\x1b]8;;link\x07\x1b[43mAA\nBB\x1b[39;49m\x1b]8;;\x07')).toMatchAnsi([
                 '\x1b[36m\x1b]8;;link\x07\x1b[43mAA\x1b]8;;\x07\x1b[49;39m',
                 '\x1b[36m\x1b]8;;link\x07\x1b[43mBB\x1b[49;39m\x1b]8;;\x07',
             ]);
         });
 
-        test('preserves the string terminator format of OSC hyperlink escapes', () => {
+        test('preserves the string terminator format of hyperlink escapes', () => {
             expect(splitLines('\x1b]8;;https://www.example.com\x1b\x5chello\nworld\x1b]8;;\x1b\x5c')).toMatchAnsi([
                 '\x1b]8;;https://www.example.com\x1b\x5chello\x1b]8;;\x1b\x5c',
                 '\x1b]8;;https://www.example.com\x1b\x5cworld\x1b]8;;\x1b\x5c',
+            ]);
+        });
+
+        test('ignores malformed hyperlink sequences', () => {
+            expect(splitLines('\x1b]8;https://www.example.com\x07hello\nworld\x1b]8;;\x07')).toMatchAnsi([
+                '\x1b]8;https://www.example.com\x07hello',
+                'world',
             ]);
         });
     });

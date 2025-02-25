@@ -161,13 +161,19 @@ export function parseEscape<T>(stack: AnsiEscape<T>[], seq: string, idx: T) {
             stack.push([str, incomplete ? 2 : 0, styleCodes.get(id) ?? '0', idx]);
         }
     } else if (link !== undefined) {
-        // if link is just a semicolon, then this is a closing hyperlink sequence
-        if (link === ';') {
+        // escape follows this pattern: OSC 8 ; [params] ; [url] ST, so params portion must be removed to get the url
+        const url = link.replace(/^[^;]*;/, '');
+        // ignore malformed hyperlink escapes that do not contain an additional ; delimeter
+        if (link === url) return null;
+        // if url is empty, then this is a closing hyperlink sequence
+        if (url === '') {
             // remove all hyperlink escapes from the stack
             for (let x = stack.length - 1; x >= 0; x -= 1) {
                 const [, attr] = stack[x]!;
                 // if item is not an open hyperlink, skip it
                 if (attr !== 1 || closedIndex.includes(x)) continue;
+                // update the closing sequence for this link
+                stack[x]![2] = seq;
                 // add stack item index to closed array
                 closedIndex.push(x);
             }
