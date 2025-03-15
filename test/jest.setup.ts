@@ -18,12 +18,18 @@ function hex(num: number) {
     return '0'.repeat(Math.max(0, 4 - h.length)) + h;
 }
 
-function escAnsi<T extends string | string[]>(arg: T): T {
-    if (typeof arg !== 'string') return arg.map(escAnsi) as T;
-    return arg.replace(/[\x1b\x07\x90-\x9f]/g, (s) => {
+function escAnsi<T extends string | string[]>(arg: T, escNewline: boolean): T {
+    if (typeof arg !== 'string') return arg.map((a) => escAnsi(a, escNewline)) as T;
+    // escape control codes
+    let escaped = arg.replace(/[\x1b\x07\x90-\x9f]/g, (s) => {
         const cp = s.codePointAt(0)!.toString(16);
         return `\\x${'0'.repeat(Math.max(0, 2 - cp.length))}${cp}`;
-    }) as T;
+    });
+    // escape carriage returns
+    escaped = escaped.replace(/\r/g, '\\r');
+    // escape newlines
+    if (escNewline) escaped = escaped.replace(/\n/g, '\\n');
+    return escaped as T;
 }
 
 expect.extend({
@@ -43,17 +49,17 @@ expect.extend({
             message: pass ? () => (
                 this.utils.matcherHint('toMatchAnsi', undefined, undefined, options)
                 + '\n\n'
-                + `Expected: not ${this.utils.printExpected(escAnsi(expected)).replace(/\\\\(?=x)/g, '\\')}`
+                + `Expected: not ${this.utils.printExpected(escAnsi(expected, false)).replace(/\\\\(?=[rx])/g, '\\')}`
             ) : () => (
                 this.utils.matcherHint('toMatchAnsi', undefined, undefined, options)
                 + '\n\n'
                 + this.utils.printDiffOrStringify(
-                    escAnsi(expected),
-                    escAnsi(received),
+                    escAnsi(expected, false),
+                    escAnsi(received, false),
                     'Expected',
                     'Received',
                     this.expand !== false,
-                ).replace(/\\\\(?=x)/g, '\\')
+                ).replace(/\\\\(?=[rx])/g, '\\')
             ),
         };
     },
@@ -72,17 +78,17 @@ expect.extend({
             message: pass ? () => (
                 this.utils.matcherHint('toMatchAll', undefined, undefined, options)
                 + '\n\n'
-                + `Expected: not ${this.utils.printExpected(escAnsi(expected)).replace(/\\\\(?=x)/g, '\\')}`
+                + `Expected: not ${this.utils.printExpected(escAnsi(expected, true)).replace(/\\\\(?=[nrx])/g, '\\')}`
             ) : () => (
                 this.utils.matcherHint('toMatchAll', undefined, undefined, options)
                 + '\n\n'
                 + this.utils.printDiffOrStringify(
-                    escAnsi(expected),
-                    escAnsi(receivedMatches),
+                    escAnsi(expected, true),
+                    escAnsi(receivedMatches, true),
                     'Expected',
                     'Received',
                     this.expand !== false,
-                ).replace(/\\\\(?=x)/g, '\\')
+                ).replace(/\\\\(?=[nrx])/g, '\\')
             ),
         };
     },
@@ -97,7 +103,7 @@ expect.extend({
                     this.utils.matcherHint('toMatchEscapeSequence', undefined, undefined, options)
                     + '\n\n'
                     + `Expected to${this.isNot ? ' not' : ''} match escape sequence: ${
-                        this.utils.printExpected(escAnsi(sequence)).replace(/\\\\(?=x)/g, '\\')
+                        this.utils.printExpected(escAnsi(sequence, true)).replace(/\\\\(?=[nrx])/g, '\\')
                     }`
                 ),
             };
@@ -115,7 +121,7 @@ expect.extend({
                 this.utils.matcherHint('toMatchEscapeSequence', undefined, undefined, options)
                 + '\n\n'
                 + `Expected to${this.isNot ? ' not' : ''} match escape sequence ${
-                    this.utils.printExpected(escAnsi(sequence)).replace(/\\\\(?=x)/g, '\\')
+                    this.utils.printExpected(escAnsi(sequence, true)).replace(/\\\\(?=[nrx])/g, '\\')
                 } without overconsuming subsequent characters`
                 + (!pass ? `\n\nOverconsumed ${this.utils.printReceived(overconsumed)}` : '')
             ),

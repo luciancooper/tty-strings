@@ -21,6 +21,14 @@ describe('ansiRegex', () => {
         test('matches start of string escapes', () => {
             expect(ansiRegex()).toMatchEscapeSequence('\x1bXstring content\x1b\x5c');
         });
+
+        test('matches osc escapes containing line terminators', () => {
+            expect(ansiRegex()).toMatchEscapeSequence('\x1b]133;C;\r\x07');
+        });
+
+        test('matches string terminated sequences containing line terminators', () => {
+            expect(ansiRegex()).toMatchEscapeSequence('\x1bXstring\ncontent\x1b\x5c');
+        });
     });
 
     describe('c1 control codes', () => {

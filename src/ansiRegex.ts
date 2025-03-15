@@ -2,9 +2,9 @@ const ansiRegexPattern = '(?:'
     // csi sequences
     + '(?:\\x1b\\x5b|\\x9b)[\\x30-\\x3f]*[\\x20-\\x2f]*[\\x40-\\x7e]'
     // osc sequences - can be terminated by BEL or ST
-    + '|(?:\\x1b\\x5d|\\x9d).*?(?:\\x1b\\x5c|[\\x07\\x9c])'
+    + '|(?:\\x1b\\x5d|\\x9d)[\\S\\s]*?(?:\\x1b\\x5c|[\\x07\\x9c])'
     // string terminated sequences (dcs, sos, pm, apc)
-    + '|(?:\\x1b[\\x50\\x58\\x5e\\x5f]|[\\x90\\x98\\x9e\\x9f]).*?(?:\\x1b\\x5c|\\x9c)'
+    + '|(?:\\x1b[\\x50\\x58\\x5e\\x5f]|[\\x90\\x98\\x9e\\x9f])[\\S\\s]*?(?:\\x1b\\x5c|\\x9c)'
     // all other escape sequences (nF, Fp, Fe, Fs)
     + '|\\x1b[\\x20-\\x2f]*[\\x30-\\x7e]'
     + ')';
